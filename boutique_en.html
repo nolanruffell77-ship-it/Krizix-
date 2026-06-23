@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop | Krizix Esport</title>
+    <link rel="icon" href="https://r2.fivemanage.com/yn4c41n5WF0bvUIcGBLe9/krizix_logo_copie-removebg-preview.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { --bg: #090b0d; --card: #111417; --card2: #161a1e; --text: #8a9099; --white: #ffffff; --green: #2ecc71; --green2: #1db954; --green-glow: rgba(46,204,113,0.18); --border: rgba(255,255,255,0.06); --blue: #3498db; }
+        * { margin: 0; padding: 0; box-sizing: border-box; } html { scroll-behavior: smooth; } body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+        nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; display: flex; justify-content: space-between; align-items: center; padding: 0 6%; height: 72px; background: rgba(9,11,13,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); } .logo-wrap { display: flex; align-items: center; text-decoration: none; } .logo-wrap img { height: 52px; transition: transform 0.3s; } .logo-wrap img:hover { transform: scale(1.06) rotate(-3deg); } .nav-links { display: flex; list-style: none; gap: 32px; align-items: center; } .nav-links a { text-decoration: none; color: var(--text); font-weight: 600; text-transform: uppercase; font-size: 13px; letter-spacing: .5px; transition: color 0.25s; cursor: pointer; position: relative; } .nav-links a::after { content: ''; position: absolute; left: 0; bottom: -4px; width: 0; height: 2px; background: var(--green); transition: width 0.3s; } .nav-links a:hover { color: var(--white); } .nav-links a:hover::after { width: 100%; } .nav-links a.active { color: var(--green); } .dropdown { position: relative; padding: 22px 0; } .dropdown-content { display: none; position: absolute; top: 100%; left: 0; background: var(--card2); min-width: 210px; border-radius: 12px; padding: 8px 0; border: 1px solid var(--border); box-shadow: 0 20px 40px rgba(0,0,0,0.6); } .dropdown:hover .dropdown-content { display: block; animation: dropIn 0.2s ease; } @keyframes dropIn { from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);} } .dropdown-content a { display: block; padding: 11px 20px; font-size: 13px; text-transform: none; color: var(--text); } .dropdown-content a::after { display: none; } .dropdown-content a:hover { color: var(--green); background: rgba(46,204,113,0.06); } .btn-join { background: transparent; color: var(--white) !important; border: 1.5px solid rgba(255,255,255,0.35); padding: 9px 22px; border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 13px; letter-spacing: .5px; text-transform: uppercase; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; } .btn-join:hover { border-color: var(--green); color: var(--green) !important; background: var(--green-glow); transform: translateY(-2px); } .btn-join::after { display: none !important; }
+        .page-hero { min-height: 55vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 140px 6% 80px; position: relative; overflow: hidden; } .page-hero::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(46,204,113,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(46,204,113,0.04) 1px, transparent 1px); background-size: 50px 50px; mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black, transparent); } .page-hero-glow { position: absolute; inset: 0; background: radial-gradient(ellipse 60% 60% at 50% 50%, rgba(46,204,113,0.07), transparent); pointer-events: none; } .page-hero-content { position: relative; z-index: 2; } .eyebrow { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 3px; color: var(--green); margin-bottom: 16px; } .page-hero h1 { font-family: 'Bebas Neue'; font-size: clamp(60px, 10vw, 110px); color: var(--white); letter-spacing: 3px; line-height: 0.9; } .page-hero h1 span { color: var(--green); } .page-hero p { font-size: 18px; color: var(--text); max-width: 520px; margin: 24px auto 0; line-height: 1.7; }
+        .shop-section { padding: 60px 6% 120px; } .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 32px; } .product-card { background: var(--card); border-radius: 24px; overflow: hidden; border: 1px solid var(--border); transition: all 0.4s cubic-bezier(.2,.8,.3,1); display: flex; flex-direction: column; position: relative; } .product-card:hover { transform: translateY(-12px); border-color: rgba(46,204,113,0.4); box-shadow: 0 30px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(46,204,113,0.2); } .product-img-wrap { position: relative; width: 100%; overflow: hidden; aspect-ratio: 1655 / 950; background: #0a0c0e; } .product-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.6s cubic-bezier(.2,.8,.3,1); } .product-card:hover .product-img-wrap img { transform: scale(1.06); } .product-tag { position: absolute; top: 16px; left: 16px; z-index: 2; padding: 5px 14px; border-radius: 50px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; } .product-tag.digital { background: rgba(52,152,219,0.9); color: #fff; backdrop-filter: blur(4px); } .product-tag.new { background: rgba(46,204,113,0.9); color: #000; backdrop-filter: blur(4px); } .product-img-wrap::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 60%); opacity: 0; transition: opacity 0.4s; } .product-card:hover .product-img-wrap::after { opacity: 1; } .product-body { padding: 28px; flex: 1; display: flex; flex-direction: column; } .product-name { font-family: 'Bebas Neue'; font-size: 28px; color: var(--white); letter-spacing: 1px; margin-bottom: 10px; } .product-desc { font-size: 14px; line-height: 1.7; color: var(--text); flex: 1; margin-bottom: 24px; } .product-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 20px; border-top: 1px solid var(--border); } .product-price { font-family: 'Bebas Neue'; font-size: 32px; color: var(--green); letter-spacing: 1px; } .product-price.free { color: var(--blue); } .btn-action { display: inline-flex; align-items: center; gap: 10px; padding: 12px 26px; border-radius: 50px; border: none; cursor: pointer; font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: .5px; text-decoration: none; transition: all 0.3s; } .btn-download { background: var(--blue); color: #fff; } .btn-download:hover { background: #2980b9; box-shadow: 0 8px 24px rgba(52,152,219,0.4); transform: translateY(-2px); }
+        .coming-soon-card { background: var(--card); border-radius: 24px; border: 1px dashed rgba(255,255,255,0.1); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 60px 40px; min-height: 340px; transition: all 0.4s cubic-bezier(.2,.8,.3,1); } .coming-soon-card:hover { border-color: rgba(46,204,113,0.3); transform: translateY(-6px); } .coming-icon { font-size: 48px; color: rgba(255,255,255,0.1); margin-bottom: 20px; } .coming-title { font-family: 'Bebas Neue'; font-size: 28px; color: rgba(255,255,255,0.3); letter-spacing: 1px; margin-bottom: 8px; } .coming-sub { font-size: 13px; color: rgba(255,255,255,0.2); }
+        .info-strip { margin: 0 6% 80px; background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 40px 50px; display: flex; gap: 60px; align-items: center; flex-wrap: wrap; } .info-item { display: flex; align-items: center; gap: 16px; } .info-icon { width: 48px; height: 48px; border-radius: 14px; background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.2); display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--green); flex-shrink: 0; } .info-text strong { display: block; color: var(--white); font-size: 15px; margin-bottom: 2px; } .info-text span { font-size: 13px; }
+        footer { background: #06080a; padding: 72px 6% 32px; border-top: 1px solid var(--border); } .footer-inner { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 60px; margin-bottom: 60px; } .footer-brand img { width: 70px; margin-bottom: 20px; } .footer-brand p { font-size: 14px; line-height: 1.7; max-width: 300px; } .socials { display: flex; gap: 14px; margin-top: 24px; } .socials a { width: 40px; height: 40px; border-radius: 50%; background: var(--card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text); font-size: 16px; text-decoration: none; transition: all 0.3s; } .socials a:hover { background: var(--green); border-color: var(--green); color: #000; transform: translateY(-3px); } .footer-col h4 { font-family: 'Bebas Neue'; font-size: 20px; color: var(--white); letter-spacing: 1px; margin-bottom: 18px; } .footer-col ul { list-style: none; } .footer-col ul li { margin-bottom: 10px; } .footer-col ul li a { color: var(--text); text-decoration: none; font-size: 14px; transition: all 0.25s; display: inline-flex; align-items: center; gap: 6px; } .footer-col ul li a:hover { color: var(--green); padding-left: 4px; } .copyright { text-align: center; font-size: 12px; border-top: 1px solid var(--border); padding-top: 24px; color: rgba(255,255,255,0.25); }
+        .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.8s ease, transform 0.8s ease; } .reveal.visible { opacity: 1; transform: translateY(0); }
+        @media (max-width: 768px) { .nav-links { display: none; } .shop-grid { grid-template-columns: 1fr; } .info-strip { gap: 30px; padding: 30px; } .footer-inner { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<nav>
+    <a href="index_en.html" class="logo-wrap">
+        <img src="https://r2.fivemanage.com/yn4c41n5WF0bvUIcGBLe9/krizix_logo_copie-removebg-preview.png" alt="Krizix Logo">
+    </a>
+    <ul class="nav-links">
+        <li><a href="index_en.html">Home</a></li>
+        <li><a href="club_en.html">The Club</a></li>
+        <li class="dropdown">
+            <a href="index_en.html#roster">Rosters <i class="fa-solid fa-chevron-down" style="font-size:10px;margin-left:4px;"></i></a>
+            <div class="dropdown-content">
+                <a href="index_en.html#roster">🎮 Fortnite</a>
+                <a href="index_en.html#roster">🚀 Rocket League</a>
+                <a href="index_en.html#roster">🦊 Apex Legends</a>
+                <a href="index_en.html#roster">🛡️ Rainbow Six</a>
+                <a href="index_en.html#roster">⚡ Valorant</a>
+            </div>
+        </li>
+        <li><a href="boutique_en.html" class="active">Shop</a></li>
+
+        <!-- LANGUAGE SWITCHER -->
+        <li class="dropdown">
+            <a style="cursor: pointer;"><i class="fa-solid fa-globe"></i> EN <i class="fa-solid fa-chevron-down" style="font-size:10px;margin-left:4px;"></i></a>
+            <div class="dropdown-content" style="min-width: 140px;">
+                <a href="boutique.html">🇫🇷 Français</a>
+                <a href="boutique_en.html" style="color: var(--green);">🇬🇧 English</a>
+            </div>
+        </li>
+
+        <li><a href="https://discord.gg/W3gj2TpfE3" target="_blank" class="btn-join"><i class="fa-brands fa-discord"></i> Join us</a></li>
+    </ul>
+</nav>
+
+<!-- HERO -->
+<div class="page-hero">
+    <div class="page-hero-glow"></div>
+    <div class="page-hero-content reveal">
+        <div class="eyebrow">Official Products</div>
+        <h1>Krizix <span>Shop</span></h1>
+        <p>Proudly wear the Koala's colors — exclusive digital items available now.</p>
+    </div>
+</div>
+
+<!-- INFO STRIP -->
+<div class="info-strip reveal">
+    <div class="info-item">
+        <div class="info-icon"><i class="fa-solid fa-download"></i></div>
+        <div class="info-text">
+            <strong>Instant Download</strong>
+            <span>Your files are available immediately</span>
+        </div>
+    </div>
+    <div class="info-item">
+        <div class="info-icon"><i class="fa-solid fa-gamepad"></i></div>
+        <div class="info-text">
+            <strong>BakkesMod Compatible</strong>
+            <span>Ready-to-use Rocket League items</span>
+        </div>
+    </div>
+    <div class="info-item">
+        <div class="info-icon"><i class="fa-solid fa-shield-halved"></i></div>
+        <div class="info-text">
+            <strong>100% Official</strong>
+            <span>Created by our graphics team</span>
+        </div>
+    </div>
+</div>
+
+<!-- SHOP -->
+<section class="shop-section">
+    <div class="eyebrow" style="text-align:center;margin-bottom:12px;">Our Catalog</div>
+    <h2 style="font-family:'Bebas Neue';font-size:clamp(36px,5vw,56px);color:var(--white);text-align:center;letter-spacing:2px;margin-bottom:48px;" class="reveal">Available <span style="color:var(--green);">Items</span></h2>
+    <div class="shop-grid">
+
+        <!-- DECAL FENNEC -->
+        <div class="product-card reveal">
+            <div class="product-img-wrap">
+                <span class="product-tag digital"><i class="fa-solid fa-microchip"></i> Digital</span>
+                <img src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/d7a8fc1f-441a-4d5b-89d0-fd9cbf3230cb.png" alt="Decal Rocket League Krizix">
+            </div>
+            <div class="product-body">
+                <div class="product-name">Decal Fennec — Krizix Edition</div>
+                <p class="product-desc">Customize your Fennec with Krizix's official colors. BakkesMod compatible. Wear our colors on the field and show your belonging to the Krizix family!</p>
+                <div class="product-footer">
+                    <div class="product-price free">Free</div>
+                    <a href="https://drive.google.com/file/d/1PxJ_vHjcKkClnU_UNLrHW9KVVNECuwy4/view?usp=drive_link" target="_blank" class="btn-action btn-download">
+                        <i class="fa-solid fa-download"></i> Download
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- COMING SOON -->
+        <div class="coming-soon-card reveal">
+            <div class="coming-icon"><i class="fa-solid fa-bag-shopping"></i></div>
+            <div class="coming-title">Coming Soon</div>
+            <div class="coming-sub">New items are arriving soon.<br>Stay connected on our Discord!</div>
+        </div>
+
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="reveal">
+    <div class="footer-inner">
+        <div class="footer-brand">
+            <img src="https://r2.fivemanage.com/yn4c41n5WF0bvUIcGBLe9/krizix_logo_copie-removebg-preview.png" alt="Logo Footer">
+            <p>Krizix Esport is an associative structure competing in several games, founded in 2026 in Brittany.</p>
+            <div class="socials">
+                <a href="https://discord.gg/W3gj2TpfE3" target="_blank"><i class="fa-brands fa-discord"></i></a>
+                <a href="https://www.instagram.com/krizix_esport?igsh=MXBlcHcxcTRwamx3Mw==" target="_blank"><i class="fa-brands fa-instagram"></i></a>
+                <a href="https://www.tiktok.com/@krizixesport1" target="_blank"><i class="fa-brands fa-tiktok"></i></a>
+                <a href="https://www.twitch.tv/josko_rl" target="_blank"><i class="fa-brands fa-twitch"></i></a>
+            </div>
+        </div>
+        <div class="footer-col">
+            <h4>Navigation</h4>
+            <ul>
+                <li><a href="index_en.html"><i class="fa-solid fa-house"></i> Home</a></li>
+                <li><a href="club_en.html"><i class="fa-solid fa-users"></i> The Club</a></li>
+                <li><a href="boutique_en.html"><i class="fa-solid fa-bag-shopping"></i> Shop</a></li>
+            </ul>
+        </div>
+        <div class="footer-col">
+            <h4>Legal</h4>
+            <ul>
+                <li><a href="#"><i class="fa-solid fa-file-lines"></i> Legal Notice</a></li>
+                <li><a href="#"><i class="fa-solid fa-shield-halved"></i> Privacy Policy</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="copyright">&copy; 2026 Krizix Esport. All rights reserved. — Founded by Josko 🐨</div>
+</footer>
+
+<script>
+const io = new IntersectionObserver(entries => { entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } }); }, { threshold: 0.08 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+</body>
+</html>

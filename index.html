@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Krizix Esport | Site Officiel</title>
+    <link rel="icon" href="https://r2.fivemanage.com/yn4c41n5WF0bvUIcGBLe9/krizix_logo_copie-removebg-preview.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --bg: #090b0d; --card: #111417; --card2: #161a1e; --text: #8a9099;
+            --white: #ffffff; --green: #2ecc71; --green2: #1db954;
+            --green-glow: rgba(46,204,113,0.18); --border: rgba(255,255,255,0.06);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+
+        #hero-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+
+        nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; display: flex; justify-content: space-between; align-items: center; padding: 0 6%; height: 72px; background: rgba(9,11,13,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); transition: background 0.3s; }
+        .logo-wrap { display: flex; align-items: center; text-decoration: none; }
+        .logo-wrap img { height: 52px; transition: transform 0.3s; }
+        .logo-wrap img:hover { transform: scale(1.06) rotate(-3deg); }
+        .nav-links { display: flex; list-style: none; gap: 32px; align-items: center; }
+        .nav-links a { text-decoration: none; color: var(--text); font-weight: 600; text-transform: uppercase; font-size: 13px; letter-spacing: .5px; transition: color 0.25s; cursor: pointer; position: relative; }
+        .nav-links a::after { content: ''; position: absolute; left: 0; bottom: -4px; width: 0; height: 2px; background: var(--green); transition: width 0.3s; }
+        .nav-links a:hover { color: var(--white); }
+        .nav-links a:hover::after { width: 100%; }
+        .nav-links a.active { color: var(--green); }
+        .dropdown { position: relative; padding: 22px 0; }
+        .dropdown-content { display: none; position: absolute; top: 100%; left: 0; background: var(--card2); min-width: 210px; border-radius: 12px; padding: 8px 0; border: 1px solid var(--border); box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
+        .dropdown:hover .dropdown-content { display: block; animation: dropIn 0.2s ease; }
+        @keyframes dropIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+        .dropdown-content a { display: block; padding: 11px 20px; font-size: 13px; text-transform: none; color: var(--text); }
+        .dropdown-content a::after { display: none; }
+        .dropdown-content a:hover { color: var(--green); background: rgba(46,204,113,0.06); }
+        .btn-join { background: transparent; color: var(--white) !important; border: 1.5px solid rgba(255,255,255,0.35); padding: 9px 22px; border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 13px; letter-spacing: .5px; text-transform: uppercase; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-join:hover { border-color: var(--green); color: var(--green) !important; background: var(--green-glow); transform: translateY(-2px); }
+        .btn-join::after { display: none !important; }
+
+        .hero { position: relative; min-height: 100vh; display: flex; align-items: center; padding: 100px 6% 80px; overflow: hidden; }
+        .hero-bg-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(46,204,113,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(46,204,113,0.04) 1px, transparent 1px); background-size: 60px 60px; mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent); }
+        .hero-glow { position: absolute; right: -10%; top: 10%; width: 600px; height: 600px; border-radius: 50%; background: radial-gradient(circle, rgba(46,204,113,0.12) 0%, transparent 70%); pointer-events: none; }
+        .hero-content { position: relative; z-index: 2; flex: 1; max-width: 620px; }
+        .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.3); padding: 6px 16px; border-radius: 50px; font-size: 12px; font-weight: 700; color: var(--green); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 28px; }
+        .hero-badge span { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: blink 1.5s infinite; }
+        @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0;} }
+        .hero h1 { font-family: 'Bebas Neue'; font-size: clamp(56px, 8vw, 100px); line-height: 0.95; letter-spacing: 2px; color: var(--white); margin-bottom: 24px; }
+        .hero h1 em { color: var(--green); font-style: normal; }
+        .hero p { font-size: 17px; line-height: 1.7; color: var(--text); max-width: 480px; margin-bottom: 40px; }
+        .hero-ctas { display: flex; gap: 16px; flex-wrap: wrap; }
+        .btn-primary { background: var(--green); color: #000; padding: 14px 34px; border-radius: 50px; text-decoration: none; font-weight: 800; font-size: 14px; letter-spacing: .5px; text-transform: uppercase; transition: all 0.3s; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 0 30px rgba(46,204,113,0.3); }
+        .btn-primary:hover { background: #fff; transform: translateY(-3px); box-shadow: 0 10px 30px rgba(46,204,113,0.4); }
+        .btn-secondary { background: transparent; color: var(--white); border: 1.5px solid var(--border); padding: 14px 34px; border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 14px; letter-spacing: .5px; text-transform: uppercase; transition: all 0.3s; display: inline-flex; align-items: center; gap: 10px; }
+        .btn-secondary:hover { border-color: var(--green); color: var(--green); transform: translateY(-3px); }
+        .hero-visual { flex: 1; display: flex; justify-content: flex-end; align-items: center; position: relative; z-index: 2; }
+        .hero-logo-3d { width: 460px; height: 460px; display: flex; justify-content: center; align-items: center; position: relative; }
+        .hero-logo-3d img { width: 340px; filter: drop-shadow(0 0 60px rgba(46,204,113,0.35)); animation: float3d 7s ease-in-out infinite; transform-style: preserve-3d; }
+        @keyframes float3d { 0%,100% { transform: translateY(0) rotate3d(1,0.3,0,0deg); filter: drop-shadow(0 0 60px rgba(46,204,113,0.35)); } 33% { transform: translateY(-18px) rotate3d(1,0.3,0,4deg); filter: drop-shadow(0 0 80px rgba(46,204,113,0.5)); } 66% { transform: translateY(-8px) rotate3d(1,0.3,0,-3deg); filter: drop-shadow(0 0 45px rgba(46,204,113,0.28)); } }
+        .orbit-ring { position: absolute; border-radius: 50%; border: 1px solid rgba(46,204,113,0.15); animation: spin linear infinite; }
+        .orbit-ring:nth-child(2) { width: 380px; height: 380px; animation-duration: 20s; }
+        .orbit-ring:nth-child(3) { width: 460px; height: 460px; animation-duration: 32s; animation-direction: reverse; border-style: dashed; }
+        .orbit-dot { position: absolute; width: 8px; height: 8px; background: var(--green); border-radius: 50%; top: -4px; left: calc(50% - 4px); box-shadow: 0 0 12px var(--green); }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* --- STATS CENTRÉES --- */
+        .stats { 
+            display: flex; gap: 0; background: var(--card); border: 1px solid var(--border); 
+            border-radius: 20px; max-width: 800px; margin: 0 auto -30px; 
+            position: relative; z-index: 10; overflow: hidden; 
+        }
+        .stat-item { flex: 1; padding: 32px 20px; text-align: center; position: relative; transition: background 0.3s; }
+        .stat-item:not(:last-child)::after { content: ''; position: absolute; right: 0; top: 20%; height: 60%; width: 1px; background: var(--border); }
+        .stat-item:hover { background: rgba(46,204,113,0.05); }
+        .stat-num { font-family: 'Bebas Neue'; font-size: 52px; color: var(--green); line-height: 1; letter-spacing: 1px; }
+        .stat-label { font-size: 12px; text-transform: uppercase; font-weight: 600; letter-spacing: 1.5px; margin-top: 4px; color: var(--text); }
+
+        /* ── SECTION VIDEO ── */
+        .video-section { padding: 80px 6% 60px; display: flex; flex-direction: column; align-items: center; }
+        .video-wrapper {
+            width: 100%; max-width: 560px; margin-top: 24px; border-radius: 16px;
+            overflow: hidden; position: relative; border: 1px solid rgba(46,204,113,0.25);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 20px rgba(46,204,113,0.1);
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+        }
+        .video-wrapper:hover {
+            transform: translateY(-6px); box-shadow: 0 30px 60px rgba(0,0,0,0.7), 0 0 40px rgba(46,204,113,0.2);
+            border-color: rgba(46,204,113,0.5);
+        }
+        .video-wrapper video { width: 100%; display: block; aspect-ratio: 16/9; object-fit: cover; }
+
+        .section { padding: 80px 6%; }
+        .section-header { margin-bottom: 56px; }
+        .eyebrow { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 3px; color: var(--green); margin-bottom: 12px; }
+        .section-title { font-family: 'Bebas Neue'; font-size: clamp(36px,5vw,60px); color: var(--white); letter-spacing: 2px; line-height: 1; }
+        .section-title span { color: var(--green); }
+
+        .grid-games { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+        .game-card { background: var(--card); border-radius: 16px; overflow: hidden; border: 1px solid var(--border); cursor: pointer; transition: all 0.4s cubic-bezier(.2,.8,.3,1); position: relative; }
+        .game-card::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.8) 100%); z-index: 1; }
+        .game-card:hover { transform: translateY(-10px) scale(1.02); border-color: var(--green); box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 0 1px rgba(46,204,113,0.3); }
+        .game-img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; transition: transform 0.5s; }
+        .game-card:hover .game-img { transform: scale(1.08); }
+        .game-info { position: absolute; bottom: 0; left: 0; right: 0; padding: 18px 16px; z-index: 2; }
+        .game-name { font-size: 15px; font-weight: 700; color: var(--white); margin-bottom: 2px; }
+        .game-status { font-size: 11px; color: var(--green); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .game-status.building { color: #f39c12; }
+
+        .matches-section { padding: 80px 6%; background: linear-gradient(180deg, var(--bg) 0%, #0d1014 100%); }
+        .matches-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 56px; }
+        .match-box { background: var(--card); border-radius: 20px; border: 1px solid var(--border); overflow: hidden; }
+        .match-box-header { padding: 24px 28px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .match-box-title { font-family: 'Bebas Neue'; font-size: 22px; color: var(--white); letter-spacing: 1px; display: flex; align-items: center; gap: 12px; }
+        .match-body { padding: 16px; }
+        .accordion-item { border-radius: 12px; overflow: hidden; margin-bottom: 10px; border: 1px solid var(--border); transition: border-color 0.3s; }
+        .accordion-item:hover { border-color: rgba(46,204,113,0.3); }
+        .accordion-header { width: 100%; background: transparent; border: none; color: var(--white); padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-family: 'Poppins'; font-size: 15px; transition: background 0.25s; }
+        .accordion-header:hover { background: rgba(255,255,255,0.03); }
+        .accordion-header i.fa-chevron-down { transition: transform 0.3s; color: var(--text); }
+        .accordion-header.active i.fa-chevron-down { transform: rotate(180deg); color: var(--green); }
+        .match-teams { display: flex; align-items: center; gap: 12px; font-weight: 600; }
+        .match-teams img { width: 28px; height: 28px; object-fit: contain; border-radius: 4px; }
+        .score { font-family: 'Bebas Neue'; font-size: 22px; color: var(--green); letter-spacing: 1px; padding: 0 8px; }
+        .score.lose { color: #e74c3c; }
+        .score.vs { color: var(--text); }
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.35s ease; }
+        .match-details { padding: 16px 18px; font-size: 13px; color: var(--text); border-top: 1px solid var(--border); }
+        .match-details p { margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .match-details strong { color: var(--white); }
+        .empty-tag { padding: 24px; text-align: center; font-style: italic; font-size: 14px; border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; }
+        .btn-small { background: var(--green); color: #000; padding: 7px 16px; border-radius: 8px; border: none; cursor: pointer; font-size: 12px; font-weight: 700; text-transform: uppercase; transition: all 0.25s; }
+        .btn-small:hover { background: var(--green2); }
+        .btn-delete { background: #c0392b; color: #fff; border: none; padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 700; margin-top: 10px; transition: 0.25s; }
+        .btn-delete:hover { background: #e74c3c; }
+
+        .partners-section { padding: 60px 0; overflow: hidden; background: var(--card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+        .scroll-track { display: inline-flex; width: max-content; animation: marquee 40s linear infinite; }
+        .scroll-track:hover { animation-play-state: paused; }
+        @keyframes marquee { 0%{transform:translateX(0);} 100%{transform:translateX(-50%);} }
+        .partner-item { margin: 0 40px; display: flex; align-items: center; }
+        .partner-item img { height: 45px; object-fit: contain; transition: all 0.3s; }
+        .partner-item img:hover { transform: scale(1.08); }
+
+        .shop-cta { margin: 80px 6%; border-radius: 24px; overflow: hidden; position: relative; padding: 80px 60px; background: linear-gradient(135deg, rgba(18,20,23,0.95), rgba(18,20,23,0.85)), url('https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070') center/cover; border: 1px solid rgba(46,204,113,0.25); text-align: center; }
+        .shop-cta::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(46,204,113,0.08) 0%, transparent 70%); }
+        .shop-cta h2 { font-family: 'Bebas Neue'; font-size: 56px; color: var(--white); letter-spacing: 2px; margin-bottom: 12px; position: relative; }
+        .shop-cta h2 span { color: var(--green); }
+        .shop-cta p { font-size: 17px; color: var(--text); margin-bottom: 36px; position: relative; }
+
+        .modal { display: none; position: fixed; z-index: 2000; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); justify-content: center; align-items: center; }
+        .modal.open { display: flex; }
+        .modal-content { background: var(--card2); padding: 44px; border-radius: 24px; width: 90%; max-width: 520px; border: 1px solid rgba(46,204,113,0.25); position: relative; text-align: center; animation: popIn 0.35s cubic-bezier(.2,.8,.3,1); }
+        @keyframes popIn { from{opacity:0;transform:scale(.9) translateY(20px);} to{opacity:1;transform:scale(1) translateY(0);} }
+        .close-btn { position: absolute; top: 16px; right: 20px; color: var(--text); font-size: 26px; font-weight: bold; cursor: pointer; transition: color 0.2s; background: none; border: none; }
+        .close-btn:hover { color: var(--green); }
+        .modal-title { font-family: 'Bebas Neue'; font-size: 38px; color: var(--white); margin-bottom: 24px; letter-spacing: 1px; }
+        .modal-title span { color: var(--green); }
+        .joueurs-liste { list-style: none; text-align: left; }
+        .joueurs-liste li { background: rgba(255,255,255,0.04); padding: 14px 18px; border-radius: 12px; margin-bottom: 10px; display: flex; align-items: center; gap: 14px; font-weight: 600; color: var(--white); border: 1px solid var(--border); transition: 0.25s; }
+        .joueurs-liste li:hover { border-color: rgba(46,204,113,0.3); background: rgba(46,204,113,0.05); }
+        .joueur-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--green); }
+        .joueurs-liste li i { color: var(--green); font-size: 20px; }
+        .admin-form { display: flex; flex-direction: column; gap: 14px; text-align: left; }
+        .admin-form label { color: var(--text); font-size: 13px; font-weight: 600; }
+        .admin-form input, .admin-form select { width: 100%; padding: 12px 14px; border-radius: 10px; background: rgba(0,0,0,0.4); border: 1px solid var(--border); color: var(--white); font-family: 'Poppins'; font-size: 14px; }
+        .admin-form input:focus, .admin-form select:focus { outline: none; border-color: var(--green); }
+
+        footer { background: #06080a; padding: 72px 6% 32px; border-top: 1px solid var(--border); }
+        .footer-inner { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 60px; margin-bottom: 60px; }
+        .footer-brand img { width: 70px; margin-bottom: 20px; }
+        .footer-brand p { font-size: 14px; line-height: 1.7; max-width: 300px; }
+        .socials { display: flex; gap: 14px; margin-top: 24px; }
+        .socials a { width: 40px; height: 40px; border-radius: 50%; background: var(--card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text); font-size: 16px; text-decoration: none; transition: all 0.3s; }
+        .socials a:hover { background: var(--green); border-color: var(--green); color: #000; transform: translateY(-3px); }
+        .footer-col h4 { font-family: 'Bebas Neue'; font-size: 20px; color: var(--white); letter-spacing: 1px; margin-bottom: 18px; }
+        .footer-col ul { list-style: none; }
+        .footer-col ul li { margin-bottom: 10px; }
+        .footer-col ul li a { color: var(--text); text-decoration: none; font-size: 14px; transition: all 0.25s; display: inline-flex; align-items: center; gap: 6px; }
+        .footer-col ul li a:hover { color: var(--green); padding-left: 4px; }
+        .copyright { text-align: center; font-size: 12px; border-top: 1px solid var(--border); padding-top: 24px; color: rgba(255,255,255,0.25); }
+
+        .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.8s ease, transform 0.8s ease; }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+
+        @media (max-width: 1024px) { .grid-games { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .hero { flex-direction: column; text-align: center; padding-top: 120px; }
+            .hero p { margin: 0 auto 40px; }
+            .hero-ctas { justify-content: center; }
+            .hero-visual { margin-top: 40px; }
+            .hero-logo-3d img { width: 240px; }
+            .stats { flex-direction: column; margin: 0 4%; }
+            .stat-item:not(:last-child)::after { display: none; }
+            .grid-games { grid-template-columns: repeat(2, 1fr); }
+            .matches-grid { grid-template-columns: 1fr; }
+            .footer-inner { grid-template-columns: 1fr; gap: 40px; }
+            .shop-cta { padding: 50px 28px; }
+            .shop-cta h2 { font-size: 40px; }
+            .section { padding: 70px 5%; }
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="hero-canvas" style="position:fixed;top:0;left:0;z-index:0;pointer-events:none;"></canvas>
+
+<nav id="navbar">
+    <a href="index.html" class="logo-wrap">
+        <img src="https://r2.fivemanage.com/yn4c41n5WF0bvUIcGBLe9/krizix_logo_copie-removebg-preview.png" alt="Krizix Logo">
+    </a>
+    <ul class="nav-links">
+        <li><a href="index.html" class="active">Accueil</a></li>
+        <li><a href="club.html">Le Club</a></li>
+        <li class="dropdown">
+            <a href="#roster">Rosters <i class="fa-solid fa-chevron-down" style="font-size:10px;margin-left:4px;"></i></a>
+            <div class="dropdown-content">
+                <a onclick="openModal('modal-fortnite')">🎮 Fortnite</a>
+                <a onclick="openModal('modal-rl')">🚀 Rocket League</a>
+                <a onclick="openModal('modal-apex')">🦊 Apex Legends</a>
+                <a onclick="openModal('modal-r6')">🛡️ Rainbow Six</a>
+                <a onclick="openModal('modal-valo')">⚡ Valorant</a>
+            </div>
+        </li>
+        <li><a href="boutique.html">Boutique</a></li>
+        
+        <!-- BOUTON DE LANGUE -->
+        <li class="dropdown">
+            <a style="cursor: pointer;">🇫🇷 FR <i class="fa-solid fa-chevron-down" style="font-size:10px;margin-left:4px;"></i></a>
+            <div class="dropdown-content" style="min-width: 140px;">
+                <a href="index.html" style="color: var(--green);">🇫🇷 Français</a>
+                <a href="index_en.html">🇬🇧 English</a>
+            </div>
+        </li>
+
+        <li><a href="https://discord.gg/W3gj2TpfE3" target="_blank" class="btn-join"><i class="fa-brands fa-discord"></i> Nous rejoindre</a></li>
+    </ul>
+</nav>
+
+<section class="hero">
+    <div class="hero-bg-grid"></div>
+    <div class="hero-glow"></div>
+    <div class="hero-content reveal">
+        <div class="hero-badge"><span></span> Saison 2026 — En cours</div>
+        <h1>Bienvenue chez<br><em>la Krizix</em><br>Esport</h1>
+        <p>Plus qu'une équipe, une famille de passionnés prêts à conquérir la scène esport francophone.</p>
+        <div class="hero-ctas">
+            <a href="#roster" class="btn-primary"><i class="fa-solid fa-gamepad"></i> Découvrir nos équipes</a>
+            <a href="https://discord.gg/W3gj2TpfE3" target="_blank" class="btn-secondary"><i class="fa-brands fa-discord"></i> Rejoindre le Discord</a>
+        </div>
+    </div>
+    <div class="hero-visual reveal">
+        <div class="hero-logo-3d">
+            <div class="orbit-ring"><div class="orbit-dot"></div></div>
+            <div class="orbit-ring"><div class="orbit-dot"></div></div>
+            <img src="https://r2.fivemanage.com/yn4c41n5WF0bvUIcGBLe9/krizix_logo_copie-removebg-preview.png" alt="Koala Krizix" id="logo3d">
+        </div>
+    </div>
+</section>
+
+<!-- 1. LA BARRE DES STATISTIQUES (CENTRÉE) -->
+<div class="stats reveal">
+    <div class="stat-item">
+        <div class="stat-num counter" data-target="0">0</div>
+        <div class="stat-label">Titres gagnés</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-num counter" data-target="5">0</div>
+        <div class="stat-label">Jeux actifs</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-num counter" data-target="100" data-plus>0</div>
+        <div class="stat-label">Membres</div>
+    </div>
+</div> <!-- FERMETURE CORRECTE -->
+
+<!-- 2. LA SECTION VIDÉO -->
+<section class="video-section reveal">
+    <div class="eyebrow">Trailer Officiel</div>
+    <h2 class="section-title">Découvrez la <span>Krizix</span></h2>
+    <div class="video-wrapper">
+        <video controls autoplay muted loop playsinline>
+            <source src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/0618.mp4" type="video/mp4">
+            Votre navigateur ne supporte pas la vidéo.
+        </video>
+    </div>
+</section>
+
+<section class="section reveal" id="roster">
+    <div class="section-header">
+        <div class="eyebrow">Compétitif</div>
+        <h2 class="section-title">Nos <span>Plateformes</span></h2>
+    </div>
+    <div class="grid-games">
+        <div class="game-card" onclick="openModal('modal-fortnite')">
+            <img src="https://r2.fivemanage.com/yn4c41n5WF0bvUIcGBLe9/Fortnite_wallpaper_1.jpg" alt="Fortnite" class="game-img">
+            <div class="game-info"><div class="game-name">Fortnite</div><div class="game-status building">En recrutement</div></div>
+        </div>
+        <div class="game-card" onclick="openModal('modal-rl')">
+            <img src="https://r2.fivemanage.com/yn4c41n5WF0bvUIcGBLe9/rl_evergreen-BuFUX3Ml.jpg" alt="Rocket League" class="game-img">
+            <div class="game-info"><div class="game-name">Rocket League</div><div class="game-status">Équipe compétitive</div></div>
+        </div>
+        <div class="game-card" onclick="openModal('modal-apex')">
+            <img src="https://media.contentapi.ea.com/content/dam/apex-legends/images/2019/01/apex-featured-image-16x9.jpg.adapt.crop16x9.1023w.jpg" alt="Apex Legends" class="game-img">
+            <div class="game-info"><div class="game-name">Apex Legends</div><div class="game-status building">En construction</div></div>
+        </div>
+        <div class="game-card" onclick="openModal('modal-r6')">
+            <img src="https://r2.fivemanage.com/yn4c41n5WF0bvUIcGBLe9/rainbow-six-siege-2-pc-ubisoft-connect-cover.jpg" alt="Rainbow Six" class="game-img">
+            <div class="game-info"><div class="game-name">Rainbow Six</div><div class="game-status building">En construction</div></div>
+        </div>
+        <div class="game-card" onclick="openModal('modal-valo')">
+            <img src="https://r2.fivemanage.com/yn4c41n5WF0bvUIcGBLe9/valorant-is-being-prototyped-for-consoles-but-it-wont-necess_5adg.jpg" alt="Valorant" class="game-img">
+            <div class="game-info"><div class="game-name">Valorant</div><div class="game-status building">En construction</div></div>
+        </div>
+    </div>
+</section>
+
+<div id="modal-fortnite" class="modal"><div class="modal-content"><button class="close-btn" onclick="closeModal('modal-fortnite')">&times;</button><h2 class="modal-title">Roster <span>Fortnite</span></h2><ul class="joueurs-liste"><li><i class="fa-solid fa-user-astronaut"></i> Joueur 1</li></ul></div></div>
+<div id="modal-rl" class="modal"><div class="modal-content"><button class="close-btn" onclick="closeModal('modal-rl')">&times;</button><h2 class="modal-title">Roster <span>Rocket League</span></h2><ul class="joueurs-liste"><li><img src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/junior.png" alt="Junior" class="joueur-avatar"> Junior!</li><li><img src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/drkx..gif" alt="Dxrk" class="joueur-avatar"> Dxrk.</li><li><img src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/63uno.png" alt="63uo" class="joueur-avatar"> 63uo</li></ul></div></div>
+<div id="modal-apex" class="modal"><div class="modal-content"><button class="close-btn" onclick="closeModal('modal-apex')">&times;</button><h2 class="modal-title">Roster <span>Apex Legends</span></h2><ul class="joueurs-liste"><li><i class="fa-solid fa-user-astronaut"></i> Joueur 1 (IGL)</li></ul></div></div>
+<div id="modal-r6" class="modal"><div class="modal-content"><button class="close-btn" onclick="closeModal('modal-r6')">&times;</button><h2 class="modal-title">Roster <span>Rainbow Six</span></h2><ul class="joueurs-liste"><li><i class="fa-solid fa-user-astronaut"></i> Joueur 1</li></ul></div></div>
+<div id="modal-valo" class="modal"><div class="modal-content"><button class="close-btn" onclick="closeModal('modal-valo')">&times;</button><h2 class="modal-title">Roster <span>Valorant</span></h2><ul class="joueurs-liste"><li><i class="fa-solid fa-user-astronaut"></i> Joueur 1</li></ul></div></div>
+
+<section class="matches-section">
+    <div class="eyebrow">Résultats & Calendrier</div>
+    <h2 class="section-title reveal">Nos <span>Matchs</span></h2>
+    <div class="matches-grid reveal">
+        <div class="match-box">
+            <div class="match-box-header">
+                <div class="match-box-title"><i class="fa-solid fa-trophy" style="color:#f1c40f"></i> Derniers Résultats</div>
+                <button id="btn-add-resultat" class="btn-small" style="display:none;" onclick="openAdminPanel('resultat')">+ Ajouter</button>
+            </div>
+            <div class="match-body">
+                <div class="accordion" id="container-resultats">
+                    <div class="empty-tag" id="empty-resultats">Aucun résultat récent — La saison va commencer !</div>
+                </div>
+            </div>
+        </div>
+        <div class="match-box">
+            <div class="match-box-header">
+                <div class="match-box-title"><i class="fa-solid fa-calendar-days" style="color:var(--green)"></i> Prochains Matchs</div>
+                <button id="btn-add-prochain" class="btn-small" style="display:none;" onclick="openAdminPanel('prochain')">+ Ajouter</button>
+            </div>
+            <div class="match-body">
+                <div class="accordion" id="container-prochains">
+                    <div class="empty-tag" id="empty-prochains">Le calendrier est en cours d'élaboration</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div id="modal-login" class="modal">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closeModal('modal-login')">&times;</button>
+        <h2 class="modal-title">Connexion <span>Admin</span></h2>
+        <p style="margin-bottom:20px;font-size:14px;">Authentifiez-vous via Discord pour vérifier vos droits.</p>
+        <p id="login-error" style="display:none; color:#e74c3c; font-size:14px; font-weight:600; margin-bottom:15px;">Échec de la connexion. Vous n'avez pas les droits nécessaires.</p>
+        <button style="width:100%;padding:14px;background:#5865F2;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;" onclick="loginWithDiscord()"><i class="fa-brands fa-discord"></i> Se connecter avec Discord</button>
+    </div>
+</div>
+
+<div id="modal-add-match" class="modal">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closeModal('modal-add-match')">&times;</button>
+        <h2 class="modal-title">Ajouter un <span>Match</span></h2>
+        <div class="admin-form">
+            <input type="hidden" id="match-type">
+            <label>Équipe adverse :</label>
+            <input type="text" id="match-adversaire" placeholder="Ex: Vitality">
+            <label>Logo adverse (URL) :</label>
+            <input type="text" id="match-logo-adv" placeholder="https://...">
+            <label>Score (Laissez vide si match à venir) :</label>
+            <input type="text" id="match-score" placeholder="Ex: 3 - 1">
+            <label>Jeu :</label>
+            <select id="match-jeu">
+                <option value="Rocket League">Rocket League</option>
+                <option value="Fortnite">Fortnite</option>
+                <option value="Valorant">Valorant</option>
+                <option value="Rainbow Six">Rainbow Six</option>
+                <option value="Apex Legends">Apex Legends</option>
+            </select>
+            <label>Tournoi / Date :</label>
+            <input type="text" id="match-details" placeholder="Ex: RLCS - 15 Juin 20h00">
+            <button class="btn-primary" onclick="submitMatch()" style="margin-top:8px;justify-content:center; border:none; padding:12px; border-radius:10px; cursor:pointer;">Valider et Ajouter</button>
+        </div>
+    </div>
+</div>
+
+<div class="partners-section reveal">
+    <p style="text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:3px;color:rgba(255,255,255,0.2);margin-bottom:24px;">Nos Partenaires</p>
+    <div class="scroll-track">
+        <!-- Groupe 1 -->
+        <div class="partner-item"><img src="https://r2.fivemanage.com/yn4c41n5WF0bvUIcGBLe9/eyJrZXkiOiJyZGMvdXBsb2Fkcy9sb2dvcy9pbnN0YW50LWdhbWluZy5qcGciLCJvdXRwdXRGb3JtYXQiOiJ3ZWJwIiwiZWRpdHMiOnsicmVzaXplIjp7IndpZHRoIjoxMDgwfX19.webp" alt="Instant Gaming"></div>
+        <div class="partner-item"><img src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/Capture_d_cran_2026-05-31_203117-removebg-preview.png" alt="The Game"></div>
+        <div class="partner-item"><img src="https://r2.fivemanage.com/yn4c41n5WF0bvUIcGBLe9/eyJrZXkiOiJyZGMvdXBsb2Fkcy9sb2dvcy9pbnN0YW50LWdhbWluZy5qcGciLCJvdXRwdXRGb3JtYXQiOiJ3ZWJwIiwiZWRpdHMiOnsicmVzaXplIjp7IndpZHRoIjoxMDgwfX19.webp" alt="Instant Gaming"></div>
+        <div class="partner-item"><img src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/Capture_d_cran_2026-05-31_203117-removebg-preview.png" alt="The Game"></div>
+        <div class="partner-item"><img src="https://r2.fivemanage.com/yn4c41n5WF0bvUIcGBLe9/eyJrZXkiOiJyZGMvdXBsb2Fkcy9sb2dvcy9pbnN0YW50LWdhbWluZy5qcGciLCJvdXRwdXRGb3JtYXQiOiJ3ZWJwIiwiZWRpdHMiOnsicmVzaXplIjp7IndpZHRoIjoxMDgwfX19.webp" alt="Instant Gaming"></div>
+        <div class="partner-item"><img src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/Capture_d_cran_2026-05-31_203117-removebg-preview.png" alt="The Game"></div>
+        
+        <!-- Groupe 2 -->
+        <div class="partner-item"><img src="https://r2.fivemanage.com/yn4c41n5WF0bvUIcGBLe9/eyJrZXkiOiJyZGMvdXBsb2Fkcy9sb2dvcy9pbnN0YW50LWdhbWluZy5qcGciLCJvdXRwdXRGb3JtYXQiOiJ3ZWJwIiwiZWRpdHMiOnsicmVzaXplIjp7IndpZHRoIjoxMDgwfX19.webp" alt="Instant Gaming"></div>
+        <div class="partner-item"><img src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/Capture_d_cran_2026-05-31_203117-removebg-preview.png" alt="The Game"></div>
+        <div class="partner-item"><img src="https://r2.fivemanage.com/yn4c41n5WF0bvUIcGBLe9/eyJrZXkiOiJyZGMvdXBsb2Fkcy9sb2dvcy9pbnN0YW50LWdhbWluZy5qcGciLCJvdXRwdXRGb3JtYXQiOiJ3ZWJwIiwiZWRpdHMiOnsicmVzaXplIjp7IndpZHRoIjoxMDgwfX19.webp" alt="Instant Gaming"></div>
+        <div class="partner-item"><img src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/Capture_d_cran_2026-05-31_203117-removebg-preview.png" alt="The Game"></div>
+        <div class="partner-item"><img src="https://r2.fivemanage.com/yn4c41n5WF0bvUIcGBLe9/eyJrZXkiOiJyZGMvdXBsb2Fkcy9sb2dvcy9pbnN0YW50LWdhbWluZy5qcGciLCJvdXRwdXRGb3JtYXQiOiJ3ZWJwIiwiZWRpdHMiOnsicmVzaXplIjp7IndpZHRoIjoxMDgwfX19.webp" alt="Instant Gaming"></div>
+        <div class="partner-item"><img src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/Capture_d_cran_2026-05-31_203117-removebg-preview.png" alt="The Game"></div>
+
+        <!-- Groupe 3 -->
+        <div class="partner-item"><img src="https://r2.fivemanage.com/yn4c41n5WF0bvUIcGBLe9/eyJrZXkiOiJyZGMvdXBsb2Fkcy9sb2dvcy9pbnN0YW50LWdhbWluZy5qcGciLCJvdXRwdXRGb3JtYXQiOiJ3ZWJwIiwiZWRpdHMiOnsicmVzaXplIjp7IndpZHRoIjoxMDgwfX19.webp" alt="Instant Gaming"></div>
+        <div class="partner-item"><img src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/Capture_d_cran_2026-05-31_203117-removebg-preview.png" alt="The Game"></div>
+        <div class="partner-item"><img src="https://r2.fivemanage.com/yn4c41n5WF0bvUIcGBLe9/eyJrZXkiOiJyZGMvdXBsb2Fkcy9sb2dvcy9pbnN0YW50LWdhbWluZy5qcGciLCJvdXRwdXRGb3JtYXQiOiJ3ZWJwIiwiZWRpdHMiOnsicmVzaXplIjp7IndpZHRoIjoxMDgwfX19.webp" alt="Instant Gaming"></div>
+        <div class="partner-item"><img src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/Capture_d_cran_2026-05-31_203117-removebg-preview.png" alt="The Game"></div>
+        <div class="partner-item"><img src="https://r2.fivemanage.com/yn4c41n5WF0bvUIcGBLe9/eyJrZXkiOiJyZGMvdXBsb2Fkcy9sb2dvcy9pbnN0YW50LWdhbWluZy5qcGciLCJvdXRwdXRGb3JtYXQiOiJ3ZWJwIiwiZWRpdHMiOnsicmVzaXplIjp7IndpZHRoIjoxMDgwfX19.webp" alt="Instant Gaming"></div>
+        <div class="partner-item"><img src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/Capture_d_cran_2026-05-31_203117-removebg-preview.png" alt="The Game"></div>
+    </div>
+</div>
+
+<div class="shop-cta reveal">
+    <h2>Krizix <span>Shop</span></h2>
+    <p>Portez fièrement les couleurs du Koala — items digitaux exclusifs disponibles.</p>
+    <a href="boutique.html" class="btn-primary" style="position: relative; z-index: 2;"><i class="fa-solid fa-bag-shopping"></i> Voir la boutique</a>
+</div>
+
+<footer class="reveal">
+    <div class="footer-inner">
+        <div class="footer-brand">
+            <img src="https://r2.fivemanage.com/yn4c41n5WF0bvUIcGBLe9/krizix_logo_copie-removebg-preview.png" alt="Logo Footer">
+            <p>Krizix Esport est une structure associative évoluant sur plusieurs jeux compétitifs, fondée en 2026 en Bretagne.</p>
+            <div class="socials">
+                <a href="https://discord.gg/W3gj2TpfE3" target="_blank"><i class="fa-brands fa-discord"></i></a>
+                <a href="https://www.instagram.com/krizix_esport?igsh=MXBlcHcxcTRwamx3Mw==" target="_blank"><i class="fa-brands fa-instagram"></i></a>
+                <a href="https://www.tiktok.com/@krizixesport1" target="_blank"><i class="fa-brands fa-tiktok"></i></a>
+                <a href="https://www.twitch.tv/josko_rl" target="_blank"><i class="fa-brands fa-twitch"></i></a>
+                <a href="https://youtube.com/@krizixe-sport-h3s?feature=shared" target="_blank"><i class="fa-brands fa-youtube"></i></a>
+            </div>
+        </div>
+        <div class="footer-col">
+            <h4>Navigation</h4>
+            <ul>
+                <li><a href="index.html"><i class="fa-solid fa-house"></i> Accueil</a></li>
+                <li><a href="club.html"><i class="fa-solid fa-users"></i> Le Club</a></li>
+                <li><a href="boutique.html"><i class="fa-solid fa-bag-shopping"></i> Boutique</a></li>
+                <li><a href="https://discord.gg/W3gj2TpfE3" target="_blank">Recrutement</a></li>
+            </ul>
+        </div>
+        <div class="footer-col">
+            <h4>Légal</h4>
+            <ul>
+                <li><a href="#"><i class="fa-solid fa-file-lines"></i> Mentions légales</a></li>
+                <li><a href="#"><i class="fa-solid fa-shield-halved"></i> Confidentialité</a></li>
+                <li id="btn-login-footer"><a onclick="openModal('modal-login')" style="cursor: pointer;"><i class="fa-solid fa-lock" style="font-size: 10px;"></i> Accès Admin</a></li>
+                <li id="btn-logout-footer" style="display: none;"><a onclick="logoutAdmin()" style="cursor: pointer; color: #e74c3c;"><i class="fa-solid fa-right-from-bracket" style="font-size: 10px;"></i> Déconnexion Admin</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="copyright">&copy; 2026 Krizix Esport. Tous droits réservés. — Fondé par Josko 🐨</div>
+</footer>
+
+<script>
+(function() {
+    const canvas = document.getElementById('hero-canvas');
+    const ctx = canvas.getContext('2d');
+    let W, H, particles = [], mouse = {x: -9999, y: -9999};
+    function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+    resize(); window.addEventListener('resize', resize); window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+    function rnd(a, b) { return a + Math.random() * (b - a); }
+    class Particle {
+        constructor() { this.reset(); }
+        reset() { this.x = rnd(0, W); this.y = rnd(0, H); this.z = rnd(0.1, 1); this.vx = rnd(-0.3, 0.3) * this.z; this.vy = rnd(-0.2, 0.2) * this.z; this.r = rnd(0.5, 1.8) * this.z; this.alpha = rnd(0.05, 0.3) * this.z; }
+        update() { this.x += this.vx; this.y += this.vy; const dx = this.x - mouse.x, dy = this.y - mouse.y; const dist = Math.sqrt(dx*dx + dy*dy); if (dist < 120) { this.x += dx/dist * 0.8; this.y += dy/dist * 0.8; } if (this.x < -10 || this.x > W+10 || this.y < -10 || this.y > H+10) this.reset(); }
+        draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI*2); ctx.fillStyle = `rgba(46,204,113,${this.alpha})`; ctx.fill(); }
+    }
+    for (let i = 0; i < 120; i++) particles.push(new Particle());
+    function connect() { for (let i = 0; i < particles.length; i++) { for (let j = i+1; j < particles.length; j++) { const a = particles[i], b = particles[j]; const dx = a.x - b.x, dy = a.y - b.y; const d = Math.sqrt(dx*dx + dy*dy); if (d < 100) { ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.strokeStyle = `rgba(46,204,113,${0.06 * (1 - d/100)})`; ctx.lineWidth = 0.5; ctx.stroke(); } } } }
+    function animate() { ctx.clearRect(0, 0, W, H); particles.forEach(p => { p.update(); p.draw(); }); connect(); requestAnimationFrame(animate); }
+    animate();
+})();
+
+const logo3d = document.getElementById('logo3d');
+if (logo3d) { document.addEventListener('mousemove', e => { const cx = window.innerWidth / 2, cy = window.innerHeight / 2; const rx = ((e.clientY - cy) / cy) * 8; const ry = ((e.clientX - cx) / cx) * -8; logo3d.style.transform = `perspective(800px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(0px)`; }); document.addEventListener('mouseleave', () => { logo3d.style.transform = ''; }); }
+
+const io = new IntersectionObserver(entries => { entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } }); }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+function animateCounters() { document.querySelectorAll('.counter').forEach(el => { const target = +el.dataset.target; const plus = el.hasAttribute('data-plus'); const duration = 1600, start = performance.now(); if(target === 0) return; function step(now) { const p = Math.min((now - start) / duration, 1); const ease = 1 - Math.pow(1 - p, 3); el.textContent = Math.round(ease * target) + (plus && p === 1 ? '+' : ''); if (p < 1) requestAnimationFrame(step); } requestAnimationFrame(step); }); }
+const statsObs = new IntersectionObserver(entries => { if (entries[0].isIntersecting) { animateCounters(); statsObs.disconnect(); } }, { threshold: 0.5 });
+const statsEl = document.querySelector('.stats'); if (statsEl) statsObs.observe(statsEl);
+
+function openModal(id) { const m = document.getElementById(id); if (m) { m.classList.add('open'); document.body.style.overflow = 'hidden'; } }
+function closeModal(id) { const m = document.getElementById(id); if (m) { m.classList.remove('open'); document.body.style.overflow = ''; if(id === 'modal-login') document.getElementById('login-error').style.display = 'none'; } }
+document.querySelectorAll('.modal').forEach(m => { m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); }); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.modal.open').forEach(m => closeModal(m.id)); });
+
+document.addEventListener('click', e => { const btn = e.target.closest('.accordion-header'); if (!btn) return; const content = btn.nextElementSibling; const isOpen = btn.classList.contains('active'); document.querySelectorAll('.accordion-header.active').forEach(h => { h.classList.remove('active'); h.nextElementSibling.style.maxHeight = '0'; }); if (!isOpen) { btn.classList.add('active'); content.style.maxHeight = content.scrollHeight + 'px'; } });
+
+if(localStorage.getItem("krizix_admin") === "true") { enableAdminMode(); }
+function loginWithDiscord() { window.open('http://localhost:3000/auth/discord/login', 'DiscordLogin', 'width=500,height=700'); }
+window.addEventListener('message', (event) => { if (event.data === 'discord_login_success') { localStorage.setItem("krizix_admin", "true"); enableAdminMode(); closeModal('modal-login'); alert("Authentification réussie ! Bienvenue Admin."); } else if (event.data === 'discord_login_failed') { document.getElementById('login-error').style.display = 'block'; } });
+function enableAdminMode() { document.getElementById('btn-add-resultat').style.display = 'inline-block'; document.getElementById('btn-add-prochain').style.display = 'inline-block'; if(document.getElementById('btn-login-footer')) document.getElementById('btn-login-footer').style.display = 'none'; if(document.getElementById('btn-logout-footer')) document.getElementById('btn-logout-footer').style.display = 'block'; loadMatchesFromDB(); }
+function logoutAdmin() { localStorage.removeItem("krizix_admin"); document.getElementById('btn-add-resultat').style.display = 'none'; document.getElementById('btn-add-prochain').style.display = 'none'; if(document.getElementById('btn-login-footer')) document.getElementById('btn-login-footer').style.display = 'block'; if(document.getElementById('btn-logout-footer')) document.getElementById('btn-logout-footer').style.display = 'none'; loadMatchesFromDB(); alert("Tu es maintenant déconnecté du mode Admin."); }
+function openAdminPanel(type) { document.getElementById('match-type').value = type; document.getElementById('match-adversaire').value = ''; document.getElementById('match-logo-adv').value = ''; document.getElementById('match-score').value = ''; document.getElementById('match-details').value = ''; openModal('modal-add-match'); }
+
+function generateMatchHTML(match) { let scoreClass = "score"; if(match.score === "VS" || match.score === "") { match.score = "VS"; scoreClass += " vs"; } else if(match.score.charAt(0) < match.score.charAt(match.score.length - 1)) scoreClass += " lose"; const isAdmin = localStorage.getItem("krizix_admin") === "true"; const deleteBtn = isAdmin ? `<button onclick="deleteMatch(event, '${match.id}')" class="btn-delete"><i class="fa-solid fa-trash"></i> Supprimer ce match</button>` : ''; return ` <div class="accordion-item"> <button class="accordion-header"> <div class="match-teams"> <img src="https://r2.fivemanage.com/yn4c41n5WF0bvUIcGBLe9/krizix_logo_copie-removebg-preview.png" alt="Krizix"> Krizix <span class="${scoreClass}">${match.score}</span> ${match.adv} <img src="${match.logoAdv}" alt="${match.adv}" style="width: 30px; height: 30px; object-fit: contain; border-radius: 5px; margin-left: 10px;"> </div> <i class="fa-solid fa-chevron-down"></i> </button> <div class="accordion-content"> <div class="match-details"> <p><strong>Détails du match :</strong></p> <p><i class="fa-solid fa-gamepad" style="color:var(--green)"></i> <strong>Jeu :</strong> ${match.jeu}</p> <p><i class="fa-solid fa-info-circle" style="color:var(--green)"></i> <strong>Infos :</strong> ${match.details}</p> ${deleteBtn} </div> </div> </div>`; }
+
+async function loadMatchesFromDB() { try { const response = await fetch('http://localhost:3000/api/matches'); const data = await response.json(); if (data.resultats && data.resultats.length > 0) { document.getElementById('empty-resultats').style.display = 'none'; let html = ''; data.resultats.forEach(m => html += generateMatchHTML(m)); document.getElementById('container-resultats').innerHTML = html; } else { document.getElementById('empty-resultats').style.display = 'block'; document.getElementById('container-resultats').innerHTML = '<div class="empty-tag" id="empty-resultats">Aucun résultat récent - La saison va commencer !</div>'; } if (data.prochains && data.prochains.length > 0) { document.getElementById('empty-prochains').style.display = 'none'; let html = ''; data.prochains.forEach(m => html += generateMatchHTML(m)); document.getElementById('container-prochains').innerHTML = html; } else { document.getElementById('empty-prochains').style.display = 'block'; document.getElementById('container-prochains').innerHTML = '<div class="empty-tag" id="empty-prochains">Le calendrier est en cours d\'élaboration</div>'; } } catch (error) { console.log("Impossible de charger les matchs depuis le serveur."); } }
+
+async function submitMatch() { const newMatch = { type: document.getElementById('match-type').value, adv: document.getElementById('match-adversaire').value || "Adversaire Inconnu", score: document.getElementById('match-score').value || "VS", jeu: document.getElementById('match-jeu').value, details: document.getElementById('match-details').value || "Détails à venir", logoAdv: document.getElementById('match-logo-adv').value || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" }; try { await fetch('http://localhost:3000/api/matches', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newMatch) }); loadMatchesFromDB(); closeModal('modal-add-match'); } catch (error) { alert("Erreur : Impossible de sauvegarder le match. Le serveur Node.js est-il allumé ?"); } }
+async function deleteMatch(event, id) { event.stopPropagation(); if(!confirm("Es-tu sûr de vouloir supprimer ce match définitivement ?")) return; try { await fetch(`http://localhost:3000/api/matches/${id}`, { method: 'DELETE' }); loadMatchesFromDB(); } catch (error) { alert("Erreur lors de la suppression."); } }
+
+window.addEventListener('load', loadMatchesFromDB);
+</script>
+</body>
+</html>
