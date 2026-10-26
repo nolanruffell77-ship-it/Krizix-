@@ -46,6 +46,27 @@ async function handleOAuthCallback() {
             if (res.ok) {
                 const user = await res.json();
                 if (user && user.id) {
+                    // --- GESTION DE LA DATE D'INSCRIPTION SUR LE SITE ---
+                    let siteJoinedAt = null;
+                    const existingUserStr = localStorage.getItem('krizix_user');
+                    if (existingUserStr) {
+                        try {
+                            const oldUser = JSON.parse(existingUserStr);
+                            if (oldUser.id === user.id && oldUser.site_joined_at) {
+                                siteJoinedAt = oldUser.site_joined_at;
+                            }
+                        } catch(e) {}
+                    }
+                    if (!siteJoinedAt) {
+                        siteJoinedAt = new Date().toLocaleDateString('fr-FR', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric'
+                        });
+                    }
+                    user.site_joined_at = siteJoinedAt;
+                    // --------------------------------------------------
+
                     localStorage.setItem('krizix_user', JSON.stringify(user));
                     window.history.replaceState({}, document.title, window.location.pathname);
                     
@@ -146,11 +167,9 @@ function updateUI(user) {
 
     injectModals(user);
 
-    // Déclenche l'affichage de la barre d'administration flottante si elle existe
     const adminBar = document.getElementById('admin-floating-bar');
     if (adminBar) adminBar.style.display = isAdmin ? 'flex' : 'none';
 
-    // Rétablissement immédiat des fonctions de rendu/édition sur les rosters et la boutique
     if (typeof renderRoster === 'function') renderRoster();
     if (typeof renderRosters === 'function') renderRosters();
     if (typeof initRosterAdmin === 'function') initRosterAdmin(isAdmin);
@@ -201,9 +220,7 @@ function closeModal(id) {
     document.getElementById(id).style.display = 'none'; 
 }
 
-// Fonction globale universelle pour l'envoi de logs vers Discord (Boutique, Rosters, Connexion)
 async function sendAdminLog(username, actionTitle, actionDetails) {
-    // 1. Sauvegarde locale dans LocalStorage
     const logs = JSON.parse(localStorage.getItem('krizix_admin_logs') || '[]');
     logs.unshift({
         user: username,
@@ -213,7 +230,6 @@ async function sendAdminLog(username, actionTitle, actionDetails) {
     });
     localStorage.setItem('krizix_admin_logs', JSON.stringify(logs.slice(0, 100)));
 
-    // 2. Envoi vers le serveur Webhook / Bot Discord local
     try {
         await fetch('http://fi4.bot-hosting.cloud:25145/api/send-log', {
             method: 'POST',
@@ -230,7 +246,6 @@ async function sendAdminLog(username, actionTitle, actionDetails) {
 }
 window.sendAdminLog = sendAdminLog;
 
-// Helper spécifique pour logger les actions Boutique (Création, Modification, Suppression)
 function logBoutiqueAction(actionType, itemTitle) {
     const user = JSON.parse(localStorage.getItem('krizix_user'));
     const username = user ? user.username : 'Admin';
