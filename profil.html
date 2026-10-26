@@ -520,6 +520,14 @@ function markAllNotificationsAsRead() {
 
 async function loadJoinDate(user){
     const dateEl = document.getElementById('profile-joined-date');
+    
+    // 1. Utilisation prioritaire de la date d'inscription propre au site enregistrée dans auth.js
+    if (user && user.site_joined_at) {
+        dateEl.innerText = `Inscrit le ${user.site_joined_at}`;
+        return;
+    }
+
+    // 2. Sinon, tentative de récupération via l'API du bot s'il y a un endpoint
     try {
         const response = await fetch(`http://fi4.bot-hosting.cloud:25145/api/member-info/${user.id}`);
         const data = await response.json();
@@ -528,6 +536,8 @@ async function loadJoinDate(user){
             return;
         }
     } catch (err) {}
+
+    // 3. Solution de secours locale
     let firstSeen = localStorage.getItem(`krizix_first_login_${user.id}`);
     if (!firstSeen) {
         firstSeen = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
