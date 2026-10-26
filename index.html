@@ -972,26 +972,41 @@
         }
 
         function startSiteTimeTrackerForIndex() {
-            const user = getConnectedUser();
-            if (!user || !user.id) return;
-            const timeKey = `krizix_online_seconds_${user.id}`;
-            let totalSeconds = Math.max(0, parseInt(localStorage.getItem(timeKey) || '0', 10) || 0);
-            let lastTick = Date.now();
-            function saveTime() { localStorage.setItem(timeKey, String(totalSeconds)); }
-            function tick() {
-                const now = Date.now();
-                const elapsed = Math.floor((now - lastTick) / 1000);
-                lastTick = now;
-                if (document.visibilityState === 'visible' && elapsed > 0) {
-                    totalSeconds += Math.min(elapsed, 10);
-                    saveTime();
-                }
-            }
-            saveTime();
-            setInterval(tick, 1000);
-            document.addEventListener('visibilitychange', () => { lastTick = Date.now(); saveTime(); });
-            window.addEventListener('pagehide', () => { tick(); saveTime(); }, { once: true });
+    const user = getConnectedUser();
+    if (!user || !user.id) return;
+
+    const timeKey = `krizix_online_seconds_${user.id}`;
+    let totalSeconds = Math.max(0, parseInt(localStorage.getItem(timeKey) || '0', 10) || 0);
+    let lastTick = Date.now();
+
+    function syncWithServer() {
+        let avatarUrl = user.avatar_url || (user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png");
+        fetch('https://mxpay16nd0.apps.bot-hosting.cloud/api/update-time', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: user.id,
+                username: user.username || user.global_name || user.name,
+                avatar: avatarUrl,
+                seconds: totalSeconds
+            })
+        }).catch(err => console.error(err));
+    }
+
+    function tick() {
+        const now = Date.now();
+        const elapsed = Math.floor((now - lastTick) / 1000);
+        lastTick = now;
+        if (document.visibilityState === 'visible' && elapsed > 0) {
+            totalSeconds += Math.min(elapsed, 10);
+            localStorage.setItem(timeKey, String(totalSeconds));
+            syncWithServer();
         }
+    }
+
+    syncWithServer();
+    setInterval(tick, 1000);
+}
 
         function formatSiteTime(seconds) {
             const totalMinutes = Math.floor(Math.max(0, seconds) / 60);
