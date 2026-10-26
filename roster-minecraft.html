@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roster Minecraft | Krizix Esport</title>
+    <link rel="icon" href="https://r2.fivemanage.com/yn4c41n5WF0bvUIcGBLe9/krizix_logo_copie-removebg-preview.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <style>
+        :root { 
+            --bg: #090b0d; 
+            --card: rgba(17, 20, 23, 0.55); 
+            --card2: rgba(22, 26, 30, 0.9); 
+            --text: #8a9099; 
+            --white: #ffffff; 
+            --green: #2ecc71; 
+            --accent-color: #2ecc71;
+            --neon-glow: rgba(46, 204, 113, 0.5);
+            --border: rgba(255, 255, 255, 0.06); 
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; min-height: 100vh; }
+
+        #bg-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; }
+
+        nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; display: flex; justify-content: space-between; align-items: center; padding: 0 6%; height: 75px; background: rgba(9, 11, 13, 0.6); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
+        .logo-wrap { display: flex; align-items: center; text-decoration: none; color: var(--white) !important; }
+        .logo-wrap img { height: 50px; margin-right: 10px; }
+        .logo-wrap span { font-family: 'Bebas Neue'; font-size: 26px; color: var(--white); letter-spacing: 1px; }
+        
+        .nav-links { display: flex; list-style: none; gap: 28px; align-items: center; }
+        .nav-links a { text-decoration: none; color: var(--text); font-weight: 600; text-transform: uppercase; font-size: 13px; letter-spacing: .5px; transition: color 0.25s; position: relative; }
+        .nav-links a::after { content: ''; position: absolute; left: 0; bottom: -4px; width: 0; height: 2px; background: var(--green); transition: width 0.3s; }
+        .nav-links a:hover, .nav-links a.active { color: var(--white) !important; }
+        .nav-links a:hover::after, .nav-links a.active::after { width: 100%; }
+
+        .dropdown { position: relative; padding: 10px 0; }
+        .dropdown-content { display: none; position: absolute; top: 100%; left: 0; background: var(--card2); min-width: 200px; border-radius: 12px; padding: 10px 0; border: 1px solid var(--border); backdrop-filter: blur(15px); }
+        .dropdown:hover .dropdown-content { display: block; }
+        .dropdown-content a { display: flex !important; align-items: center; gap: 10px; padding: 10px 20px; font-size: 13px; text-transform: none; color: var(--text) !important; }
+        .dropdown-content a::after { display: none; }
+        .dropdown-content a:hover { color: var(--green) !important; background: rgba(255,255,255,0.02); }
+        .game-nav-icon { width: 18px; height: 18px; object-fit: contain; border-radius: 3px; }
+
+        .lang-switch, .theme-switch { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--white); padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: 700; transition: all 0.3s; display: inline-flex; align-items: center; gap: 6px; }
+        .lang-switch:hover, .theme-switch:hover { border-color: var(--green); color: var(--green); box-shadow: 0 0 10px var(--neon-glow); }
+        
+        .btn-discord { background: transparent; color: var(--white) !important; border: 1.5px solid rgba(255,255,255,0.15); padding: 9px 22px; border-radius: 50px; text-transform: uppercase; font-weight: 700; font-size: 12px; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+        .btn-discord:hover { background: var(--green) !important; color: #000000 !important; border-color: var(--green) !important; box-shadow: 0 0 15px var(--neon-glow); }
+
+        .game-header { position: relative; width: 100vw; height: 50vh; margin-top: 75px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-bottom: 2px solid var(--green); }
+        .game-header img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.4; z-index: 1; }
+        .game-title { position: relative; z-index: 2; text-align: center; }
+        .game-title h1 { font-family: 'Bebas Neue'; font-size: 6rem; color: #fff; letter-spacing: 4px; text-shadow: 0 5px 15px rgba(0,0,0,0.8); }
+
+        main { max-width: 1200px; margin: 50px auto 80px auto; padding: 0 25px; }
+
+        .game-info-box { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 45px; backdrop-filter: blur(15px); margin-bottom: 50px; }
+        .game-info-box h2 { font-family: 'Bebas Neue'; font-size: 2.5rem; color: #fff; margin-bottom: 15px; border-left: 4px solid var(--green); padding-left: 15px; }
+        .game-info-box p { line-height: 1.8; font-size: 1.05rem; margin-bottom: 30px; color: #a4abb5; }
+        
+        .comp-tags { display: flex; gap: 15px; flex-wrap: wrap; }
+        .tag { background: rgba(46,204,113,0.1); border: 1px solid var(--green); color: var(--green); padding: 10px 25px; border-radius: 30px; font-weight: 800; font-size: 14px; letter-spacing: 1px; }
+
+        .roster-section-title { text-align: center; font-family: 'Bebas Neue'; font-size: 4rem; color: #fff; margin-bottom: 40px; }
+        .roster-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 280px)); gap: 30px; justify-content: center; }
+        
+        .member-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 40px 20px; text-align: center; backdrop-filter: blur(15px); transition: transform 0.3s, border-color 0.3s; position: relative; }
+        .member-card.is-admin { cursor: pointer; }
+        .member-card:hover { transform: translateY(-10px); border-color: var(--green); }
+        .member-img { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 3px solid var(--green); margin: 0 auto 20px auto; display: block; }
+        
+        #admin-floating-bar {
+            position: fixed; bottom: 20px; right: 20px;
+            background: rgba(15, 18, 22, 0.92); border: 1px solid rgba(46, 204, 113, 0.4);
+            padding: 10px 16px; border-radius: 14px; z-index: 9999; display: none; align-items: center; gap: 10px;
+            backdrop-filter: blur(15px); box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+        }
+        .admin-floating-btn {
+            background: rgba(46, 204, 113, 0.15); color: var(--green); border: 1px solid rgba(46, 204, 113, 0.3);
+            padding: 7px 12px; border-radius: 8px; font-weight: 700; font-size: 11px; cursor: pointer;
+            display: flex; align-items: center; gap: 6px; text-transform: uppercase; transition: all 0.2s ease;
+        }
+        .admin-floating-btn:hover { background: var(--green); color: #000; box-shadow: 0 0 10px rgba(46, 204, 113, 0.4); }
+
+        .modal { position: fixed; inset: 0; background: rgba(9,11,13,0.85); backdrop-filter: blur(10px); z-index: 20000; display: none; align-items: center; justify-content: center; }
+        .modal-content { background: var(--card2); border: 1px solid rgba(46,204,113,0.3); padding: 35px; border-radius: 20px; width: 90%; max-width: 420px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 12px; color: #7f8691; margin-bottom: 6px; font-weight: 600; }
+        .form-group input { width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 10px; color: #fff; font-family: inherit; outline: none; }
+        .form-group input:focus { border-color: var(--green); }
+        .modal-btns { display: flex; gap: 10px; margin-top: 20px; }
+        .btn { flex: 1; padding: 12px; border-radius: 10px; font-weight: 700; border: none; cursor: pointer; text-transform: uppercase; font-size: 12px; }
+        .btn-submit { background: var(--green); color: #000; }
+        .btn-cancel { background: rgba(255,255,255,0.08); color: #fff; }
+        .btn-delete { background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid rgba(231, 76, 60, 0.4); }
+        .btn-delete:hover { background: #e74c3c; color: #fff; }
+
+        .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.8s, transform 0.8s; }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+
+        footer { background: rgba(9, 11, 13, 0.8); backdrop-filter: blur(15px); border-top: 1px solid var(--border); padding: 50px 6% 25px 6%; margin-top: 80px; text-align: center; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+    <canvas id="bg-canvas"></canvas>
+
+    <nav>
+        <a href="index.html" class="logo-wrap">
+            <img src="https://r2.fivemanage.com/yn4c41n5WF0bvUIcGBLe9/krizix_logo_copie-removebg-preview.png" alt="Krizix Logo">
+            <span>Krizix Esport</span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="index.html" data-fr="Accueil" data-en="Home">Accueil</a></li>
+            <li><a href="club.html" data-fr="Le Club" data-en="The Club">Le Club</a></li>
+            <li class="dropdown">
+                <a href="#" class="active" data-fr="Rosters" data-en="Rosters">Rosters <i class="fa-solid fa-chevron-down" style="font-size:10px;"></i></a>
+                <div class="dropdown-content">
+                    <a href="roster-fortnite.html"><img src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/Fortnite_F_lettermark_logo(1).png" class="game-nav-icon" alt="Fortnite"> Fortnite</a>
+                    <a href="roster-rl.html"><img src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/avt5ka5bd-removebg-preview.png" class="game-nav-icon" alt="Rocket League"> Rocket League</a>
+                    <a href="roster-valorant.html"><img src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/tlcharg(10).jpg" class="game-nav-icon" alt="Valorant"> Valorant</a>
+                    <a href="roster-minecraft.html" style="color:var(--green) !important;"><img src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/png-clipartminecraft-youtube-logo-png-green-minecraft-icon-branding5511673-thumbnail-removebg-preview.png" class="game-nav-icon" alt="Minecraft"> Minecraft</a>
+                    <a href="roster-r6.html"><img src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/product-E1063325_3-removebg-preview.png" class="game-nav-icon" alt="Rainbow Six Siege"> Rainbow Six Siege</a>
+                    <a href="roster-apex.html"><img src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/Apex-Legends-Logo-PNG-Download-Image-removebg-preview.png" class="game-nav-icon" alt="Apex Legends"> Apex Legends</a>
+                </div>
+            </li>
+            <li><a href="boutique.html" data-fr="Boutique" data-en="Shop">Boutique</a></li>
+            <li><button class="theme-switch" onclick="toggleTheme()" title="Changer de couleur (Vert / Bleu)"><i class="fa-solid fa-palette"></i> <span id="theme-name-label">Vert</span></button></li>
+            <li><button class="lang-switch" onclick="toggleLanguage()">FR / EN</button></li>
+            <li id="auth-nav-item">
+                <button type="button" class="btn-discord" onclick="loginWithDiscord()">
+                    <i class="fa-brands fa-discord"></i> Connexion
+                </button>
+            </li>
+        </ul>
+    </nav>
+
+    <div id="admin-floating-bar">
+        <button class="admin-floating-btn" onclick="openPlayerModal()"><i class="fa-solid fa-user-plus"></i> Ajouter Joueur</button>
+        <button class="admin-floating-btn" onclick="openCompModal()"><i class="fa-solid fa-trophy"></i> Compétitions</button>
+        <button class="admin-floating-btn" onclick="openBannerModal()"><i class="fa-solid fa-image"></i> Changer Bannière</button>
+    </div>
+
+    <header class="game-header reveal">
+        <img id="page-banner-img" src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/wp8484621.jpg" alt="Minecraft">
+        <div class="game-title">
+            <h1>MINECRAFT</h1>
+        </div>
+    </header>
+
+    <main>
+        <div class="game-info-box reveal">
+            <h2 data-fr="Le Projet" data-en="The Project">Le Projet</h2>
+            <p data-fr="Maîtrise du PvP, build compétitif et stratégie d'équipe définissent notre roster Minecraft. Nos joueurs s'illustrent sur les plus grands tournois communautaires et compétitifs." 
+               data-en="PvP mastery, competitive building, and team strategy define our Minecraft roster. Our players excel in the biggest community and competitive tournaments.">
+                Maîtrise du PvP, build compétitif et stratégie d'équipe définissent notre roster Minecraft. Nos joueurs s'illustrent sur les plus grands tournois communautaires et compétitifs.
+            </p>
+            <h2 data-fr="Compétitions" data-en="Competitions">Compétitions</h2>
+            <div class="comp-tags" id="comp-tags-container"></div>
+        </div>
+
+        <h2 class="roster-section-title reveal" data-fr="Roster Principal" data-en="Main Roster">Roster Principal</h2>
+        <div class="roster-grid reveal" id="roster-container"></div>
+    </main>
+
+    <div class="modal" id="modal-player">
+        <div class="modal-content">
+            <h3 id="modal-player-title" style="font-family:'Bebas Neue'; font-size:2rem; color:#fff; margin-bottom:20px;">Modifier le Joueur</h3>
+            <input type="hidden" id="edit-player-index">
+            <div class="form-group"><label>Nom du joueur</label><input type="text" id="edit-player-name" placeholder="Ex: Joueur 1"></div>
+            <div class="form-group"><label>Rôle (ex: PvP, Builder, Captain...)</label><input type="text" id="edit-player-role" placeholder="Ex: PvP Specialist"></div>
+            <div class="form-group"><label>URL de la photo</label><input type="text" id="edit-player-img" placeholder="Ex: https://image.png"></div>
+            <div class="modal-btns">
+                <button class="btn btn-delete" id="btn-delete-player" onclick="deletePlayer()" style="display:none;"><i class="fa-solid fa-trash"></i> Supprimer</button>
+                <button class="btn btn-cancel" onclick="closePlayerModal()">Annuler</button>
+                <button class="btn btn-submit" onclick="savePlayer()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-comp">
+        <div class="modal-content">
+            <h3 style="font-family:'Bebas Neue'; font-size:2rem; color:#fff; margin-bottom:20px;">Gérer les Compétitions</h3>
+            <div class="form-group">
+                <label>Compétitions séparées par des virgules</label>
+                <input type="text" id="comp-input" placeholder="Ex: MC Championship, Ranked Practice">
+            </div>
+            <div class="modal-btns">
+                <button class="btn btn-cancel" onclick="closeCompModal()">Annuler</button>
+                <button class="btn btn-submit" onclick="saveCompetitions()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-banner">
+        <div class="modal-content">
+            <h3 style="font-family:'Bebas Neue'; font-size:2rem; color:#fff; margin-bottom:20px;">Changer la Bannière</h3>
+            <div class="form-group"><label>URL de l'image de l'en-tête</label><input type="text" id="banner-url-input" placeholder="Ex: https://image.jpg"></div>
+            <div class="modal-btns">
+                <button class="btn btn-cancel" onclick="closeBannerModal()">Annuler</button>
+                <button class="btn btn-submit" onclick="saveBanner()">Mettre à jour</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>&copy; 2026 Krizix Esport. Tous droits réservés.</footer>
+
+    <script src="auth.js"></script>
+    <script>
+        // --- GESTION DU THÈME GLOBAL DU SITE (VERT / BLEU ET NÉONS) ---
+        function toggleTheme() {
+            const currentTheme = localStorage.getItem('krizix_theme') || 'green';
+            const newTheme = currentTheme === 'green' ? 'blue' : 'green';
+            applyTheme(newTheme);
+        }
+
+        function applyTheme(themeName) {
+            localStorage.setItem('krizix_theme', themeName);
+            
+            const root = document.documentElement;
+            let mainColor, neonShadow;
+
+            if (themeName === 'blue') {
+                mainColor = '#3498db';
+                neonShadow = 'rgba(52, 152, 219, 0.6)';
+                if(document.getElementById('theme-name-label')) document.getElementById('theme-name-label').innerText = 'Bleu';
+            } else {
+                mainColor = '#2ecc71';
+                neonShadow = 'rgba(46, 204, 113, 0.6)';
+                if(document.getElementById('theme-name-label')) document.getElementById('theme-name-label').innerText = 'Vert';
+            }
+
+            root.style.setProperty('--green', mainColor);
+            root.style.setProperty('--accent-color', mainColor);
+            root.style.setProperty('--neon-glow', neonShadow);
+        }
+
+        // Charger le thème global au démarrage
+        const savedTheme = localStorage.getItem('krizix_theme') || 'green';
+        applyTheme(savedTheme);
+
+        const storageKey = 'krizix_roster_minecraft';
+        const bannerKey = 'krizix_banner_minecraft';
+        const compKey = 'krizix_comp_minecraft';
+
+        const defaultPlayers = [
+            { name: "Joueur 1", role: "PvP Specialist", img: "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" },
+            { name: "Joueur 2", role: "Builder Pro", img: "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" },
+            { name: "Joueur 3", role: "Capitaine", img: "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" }
+        ];
+
+        const defaultComps = ["MC Championship", "Ranked Practice"];
+
+        let players = JSON.parse(localStorage.getItem(storageKey)) || defaultPlayers;
+        let pageBanner = localStorage.getItem(bannerKey) || "https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/wp8484621.jpg";
+        let competitions = JSON.parse(localStorage.getItem(compKey)) || defaultComps;
+
+        // --- VÉRIFICATION STRICTE DES DROITS ADMIN (ID DISCORD) ---
+        function checkIsAdmin() {
+            const savedUser = localStorage.getItem('krizix_user');
+            const ADMIN_IDS = ["1078676804010770512", "1222520269550260246", "883405254761267243"];
+            if (savedUser) {
+                try {
+                    const user = JSON.parse(savedUser);
+                    if (user && user.id && ADMIN_IDS.includes(String(user.id))) {
+                        return true;
+                    }
+                } catch(e) {}
+            }
+            return false;
+        }
+
+        function renderRoster() {
+            const isAdmin = checkIsAdmin();
+
+            const bannerEl = document.getElementById('page-banner-img');
+            if (bannerEl) bannerEl.src = pageBanner;
+
+            const compContainer = document.getElementById('comp-tags-container');
+            if (compContainer) {
+                compContainer.innerHTML = competitions.map(c => `<span class="tag">${c}</span>`).join('');
+            }
+
+            const container = document.getElementById('roster-container');
+            if (container) {
+                container.innerHTML = players.map((p, i) => `
+                    <div class="member-card ${isAdmin ? 'is-admin' : ''}" ${isAdmin ? `onclick="openPlayerModal(${i})"` : ''}>
+                        <img class="member-img" src="${p.img || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'}" alt="${p.name}">
+                        <h3 style="color:#fff; font-size:1.5rem;">${p.name}</h3>
+                        <p style="color:var(--green); font-size:13px; font-weight:600; margin-top:5px; text-transform:uppercase;">${p.role}</p>
+                    </div>
+                `).join('');
+            }
+
+            const floatingBar = document.getElementById('admin-floating-bar');
+            if (floatingBar) {
+                floatingBar.style.display = isAdmin ? 'flex' : 'none';
+            }
+        }
+
+        function openPlayerModal(i = null) {
+            if (!checkIsAdmin()) return;
+            const deleteBtn = document.getElementById('btn-delete-player');
+            if (i !== null) {
+                document.getElementById('modal-player-title').innerText = "Modifier le Joueur";
+                document.getElementById('edit-player-index').value = i;
+                document.getElementById('edit-player-name').value = players[i].name;
+                document.getElementById('edit-player-role').value = players[i].role;
+                document.getElementById('edit-player-img').value = players[i].img || '';
+                deleteBtn.style.display = 'block';
+            } else {
+                document.getElementById('modal-player-title').innerText = "Ajouter un Joueur";
+                document.getElementById('edit-player-index').value = '';
+                document.getElementById('edit-player-name').value = '';
+                document.getElementById('edit-player-role').value = '';
+                document.getElementById('edit-player-img').value = '';
+                deleteBtn.style.display = 'none';
+            }
+            document.getElementById('modal-player').style.display = 'flex';
+        }
+
+        function closePlayerModal() { document.getElementById('modal-player').style.display = 'none'; }
+
+        // --- ENVOI DE LOGS PRÉCIS AU FORMAT ACTION ADMIN ---
+        function sendClubAdminLog(actionTitle, detailsText) {
+            const savedUser = JSON.parse(localStorage.getItem('krizix_user') || '{}');
+            const author = savedUser.username || savedUser.global_name || savedUser.name || "Administrateur";
+
+            fetch('http://fi4.bot-hosting.cloud:25145/api/send-log', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: author,
+                    action: actionTitle,
+                    details: detailsText
+                })
+            })
+            .catch(err => console.error("Erreur log :", err));
+        }
+
+        function savePlayer() {
+            if (!checkIsAdmin()) return;
+            const i = document.getElementById('edit-player-index').value;
+            const name = document.getElementById('edit-player-name').value.trim() || 'Joueur';
+            const role = document.getElementById('edit-player-role').value.trim() || 'Légende';
+            const img = document.getElementById('edit-player-img').value.trim();
+
+            if (i !== '' && players[i]) {
+                const oldPlayer = players[i];
+                let changes = [];
+                if (oldPlayer.name !== name) changes.push(`• Nom : "${oldPlayer.name}" ➔ "${name}"`);
+                if (oldPlayer.role !== role) changes.push(`• Rôle : "${oldPlayer.role}" ➔ "${role}"`);
+                if (oldPlayer.img !== img) {
+                    changes.push(`• Ancienne Image :\n${oldPlayer.img || 'Aucune'}\n• Nouvelle Image :\n${img || 'Aucune'}`);
+                }
+
+                oldPlayer.name = name;
+                oldPlayer.role = role;
+                oldPlayer.img = img;
+
+                const detailsTxt = `A mis à jour le joueur ${oldPlayer.name} du roster Minecraft :\n${changes.length > 0 ? changes.join('\n') : 'Aucune modification'}`;
+                sendClubAdminLog("Action Admin - Joueur Minecraft Modifié", detailsTxt);
+            } else {
+                players.push({ name, role, img });
+                const detailsTxt = `A ajouté le nouveau joueur ${name} dans le roster Minecraft :\n• Rôle : "${role}"\n• Image :\n${img || 'Aucune'}`;
+                sendClubAdminLog("Action Admin - Joueur Minecraft Ajouté", detailsTxt);
+            }
+
+            localStorage.setItem(storageKey, JSON.stringify(players));
+            closePlayerModal();
+            renderRoster();
+        }
+
+        function deletePlayer() {
+            if (!checkIsAdmin()) return;
+            const i = document.getElementById('edit-player-index').value;
+            if (i === '' || !players[i]) return;
+
+            const playerToDelete = players[i];
+            players.splice(i, 1);
+            localStorage.setItem(storageKey, JSON.stringify(players));
+
+            const detailsTxt = `A supprimé le joueur ${playerToDelete.name} du roster Minecraft :\n• Rôle : "${playerToDelete.role}"\n• Image :\n${playerToDelete.img || 'Aucune'}`;
+            sendClubAdminLog("Action Admin - Joueur Minecraft Supprimé", detailsTxt);
+
+            closePlayerModal();
+            renderRoster();
+        }
+
+        function openCompModal() {
+            if (!checkIsAdmin()) return;
+            document.getElementById('comp-input').value = competitions.join(', ');
+            document.getElementById('modal-comp').style.display = 'flex';
+        }
+
+        function closeCompModal() { document.getElementById('modal-comp').style.display = 'none'; }
+
+        function saveCompetitions() {
+            if (!checkIsAdmin()) return;
+            const inputVal = document.getElementById('comp-input').value;
+            const newComps = inputVal.split(',').map(item => item.trim()).filter(item => item.length > 0);
+            
+            const oldCompsStr = competitions.join(', ');
+            competitions = newComps;
+            localStorage.setItem(compKey, JSON.stringify(competitions));
+
+            const detailsTxt = `A mis à jour les compétitions du roster Minecraft :\n• Anciennes : [${oldCompsStr}]\n• Nouvelles : [${competitions.join(', ')}]`;
+            sendClubAdminLog("Action Admin - Compétitions Minecraft Modifiées", detailsTxt);
+
+            closeCompModal();
+            renderRoster();
+        }
+
+        function openBannerModal() {
+            if (!checkIsAdmin()) return;
+            document.getElementById('banner-url-input').value = pageBanner;
+            document.getElementById('modal-banner').style.display = 'flex';
+        }
+
+        function closeBannerModal() { document.getElementById('modal-banner').style.display = 'none'; }
+
+        function saveBanner() {
+            if (!checkIsAdmin()) return;
+            const newBanner = document.getElementById('banner-url-input').value.trim();
+            if (newBanner && pageBanner !== newBanner) {
+                const oldBanner = pageBanner;
+                pageBanner = newBanner;
+                localStorage.setItem(bannerKey, pageBanner);
+
+                const detailsTxt = `A mis à jour la bannière du roster Minecraft :\n• Ancienne Image :\n${oldBanner}\n• Nouvelle Image :\n${pageBanner}`;
+                sendClubAdminLog("Action Admin - Bannière Minecraft Modifiée", detailsTxt);
+            }
+            closeBannerModal();
+            renderRoster();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderRoster();
+        });
+
+        const scene = new THREE.Scene(); const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000); const renderer = new THREE.WebGLRenderer({canvas: document.getElementById('bg-canvas'), alpha: true, antialias: true}); renderer.setSize(window.innerWidth, window.innerHeight);
+        const pGeo = new THREE.BufferGeometry(); const pPos = new Float32Array(7500); for(let i=0;i<7500;i++) pPos[i] = (Math.random()-0.5)*50; pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3)); const pMat = new THREE.PointsMaterial({color: 0x2ecc71, size: 0.08, transparent: true, opacity: 0.25}); const pSys = new THREE.Points(pGeo, pMat); scene.add(pSys); camera.position.z = 18;
+        function anim() { requestAnimationFrame(anim); pSys.rotation.y += 0.0008; renderer.render(scene, camera); } anim();
+
+        let currentLang = localStorage.getItem('krizix_lang') || 'fr';
+        function applyLanguage() { document.querySelectorAll('[data-fr]').forEach(el => el.innerHTML = el.getAttribute('data-'+currentLang)); }
+        function toggleLanguage() { currentLang = currentLang === 'fr' ? 'en' : 'fr'; localStorage.setItem('krizix_lang', currentLang); applyLanguage(); } applyLanguage();
+        
+        const io = new IntersectionObserver(e => e.forEach(x => { if(x.isIntersecting) x.target.classList.add('visible'); }), {threshold: 0.1});
+        document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+    </script>
+</body>
+</html>

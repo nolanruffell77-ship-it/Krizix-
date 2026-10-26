@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le Club | Krizix Esport</title>
+    <link rel="icon" href="https://r2.fivemanage.com/yn4c41n5WF0bvUIcGBLe9/krizix_logo_copie-removebg-preview.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- SCRIPT SYNCHRONE : Empêche le flash de l'animation au clic sur Accueil / Club -->
+    <script>
+        if (sessionStorage.getItem('krizix_intro_played')) {
+            document.documentElement.classList.add('skip-intro');
+        }
+    </script>
+    <style>
+        .skip-intro #intro-splash { display: none !important; }
+    </style>
+
+    <style>
+        :root { 
+            --bg: #090b0d; 
+            --card: rgba(17, 20, 23, 0.55); 
+            --card2: rgba(22, 26, 30, 0.85); 
+            --text: #8a9099; 
+            --white: #ffffff; 
+            --green: #2ecc71; 
+            --accent-color: #2ecc71;
+            --neon-glow: rgba(46, 204, 113, 0.5);
+            --border: rgba(255, 255, 255, 0.06); 
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; min-height: 100vh; }
+
+        /* ANIMATION D'OUVERTURE PROGRESSIVE (EFFET RIDEAU) */
+        #intro-splash {
+            position: fixed; inset: 0; z-index: 99999;
+            display: flex; pointer-events: none; overflow: hidden;
+            background: rgba(9, 11, 13, 0.98);
+        }
+        .splash-panel {
+            position: absolute; top: 0; width: 50%; height: 100%; background: #090b0d;
+            transition: transform 0.85s cubic-bezier(0.77, 0, 0.175, 1);
+            z-index: 1;
+        }
+        .splash-left { 
+            left: 0; 
+            border-right: 2px solid var(--accent-color); 
+            box-shadow: 2px 0 15px var(--neon-glow);
+        }
+        .splash-right { 
+            right: 0; 
+            border-left: 2px solid var(--accent-color); 
+            box-shadow: -2px 0 15px var(--neon-glow);
+        }
+        
+        #intro-splash.splash-open .splash-left { transform: translateX(-100%); }
+        #intro-splash.splash-open .splash-right { transform: translateX(100%); }
+
+        .splash-content {
+            position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 5; transition: opacity 0.5s ease;
+        }
+        
+        .splash-logo-container {
+            width: 210px;
+            height: 210px;
+            border-radius: 50%;
+            border: 3px solid var(--accent-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #090b0d;
+            box-shadow: 0 0 35px var(--neon-glow);
+            animation: pulseCircle 1.2s infinite alternate ease-in-out;
+            position: relative;
+            z-index: 10;
+        }
+        .splash-logo-container img {
+            height: 130px; object-fit: contain;
+            animation: pulseLogo 1.2s infinite alternate ease-in-out;
+        }
+        .splash-content h2 {
+            font-family: 'Bebas Neue'; font-size: 3rem; color: #fff; letter-spacing: 2px;
+            text-shadow: 0 0 20px var(--neon-glow); margin-top: 20px;
+            background: #090b0d;
+            padding: 4px 20px;
+            border-radius: 8px;
+            position: relative;
+            z-index: 10;
+        }
+        @keyframes pulseCircle {
+            0% { transform: scale(1); box-shadow: 0 0 25px var(--neon-glow); }
+            100% { transform: scale(1.06); box-shadow: 0 0 50px var(--neon-glow); }
+        }
+        @keyframes pulseLogo {
+            0% { transform: scale(1); filter: drop-shadow(0 0 10px var(--neon-glow)); }
+            100% { transform: scale(1.08); filter: drop-shadow(0 0 25px var(--neon-glow)); }
+        }
+
+        #bg-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; }
+
+        nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; display: flex; justify-content: space-between; align-items: center; padding: 0 6%; height: 75px; background: rgba(9, 11, 13, 0.6); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
+        .logo-wrap { display: flex; align-items: center; text-decoration: none; color: var(--white) !important; }
+        .logo-wrap:visited, .logo-wrap:hover, .logo-wrap:active { color: var(--white) !important; text-decoration: none; }
+        .logo-wrap img { height: 50px; margin-right: 10px; }
+        .logo-wrap span { font-family: 'Bebas Neue'; font-size: 26px; color: var(--white); letter-spacing: 1px; }
+        
+        .nav-links { display: flex; list-style: none; gap: 28px; align-items: center; }
+        .nav-links a { text-decoration: none; color: var(--text); font-weight: 600; text-transform: uppercase; font-size: 13px; letter-spacing: .5px; transition: color 0.25s; position: relative; }
+        .nav-links a:visited { color: var(--text); }
+        .nav-links a::after { content: ''; position: absolute; left: 0; bottom: -4px; width: 0; height: 2px; background: var(--green); transition: width 0.3s; }
+        .nav-links a:hover, .nav-links a.active { color: var(--white) !important; }
+        .nav-links a:hover::after, .nav-links a.active::after { width: 100%; }
+
+        .dropdown { position: relative; padding: 10px 0; }
+        .dropdown-content { display: none; position: absolute; top: 100%; left: 0; background: var(--card2); min-width: 200px; border-radius: 12px; padding: 10px 0; border: 1px solid var(--border); backdrop-filter: blur(15px); }
+        .dropdown:hover .dropdown-content { display: block; }
+        .dropdown-content a { display: flex !important; align-items: center; gap: 10px; padding: 10px 20px; font-size: 13px; text-transform: none; color: var(--text) !important; }
+        .dropdown-content a::after { display: none; }
+        .dropdown-content a:hover { color: var(--green) !important; background: rgba(255,255,255,0.02); }
+        .game-nav-icon { width: 18px; height: 18px; object-fit: contain; border-radius: 3px; }
+
+        .lang-switch, .theme-switch { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--white); padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: 700; transition: all 0.3s; display: inline-flex; align-items: center; gap: 6px; }
+        .lang-switch:hover, .theme-switch:hover { border-color: var(--green); color: var(--green); box-shadow: 0 0 10px var(--neon-glow); }
+        
+        .btn-discord { background: transparent; color: var(--white) !important; border: 1.5px solid rgba(255,255,255,0.15); padding: 9px 22px; border-radius: 50px; text-transform: uppercase; font-weight: 700; font-size: 12px; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+        .btn-discord:hover { background: var(--green) !important; color: #000000 !important; border-color: var(--green) !important; box-shadow: 0 0 15px var(--neon-glow); }
+
+        main { max-width: 1200px; margin: 120px auto 60px auto; padding: 0 25px; }
+
+        .history-box { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 45px; backdrop-filter: blur(15px); margin-bottom: 50px; }
+        .history-box h2 { font-family: 'Bebas Neue'; font-size: 3rem; color: #fff; margin-bottom: 20px; border-left: 4px solid var(--accent-color); padding-left: 15px; }
+        .history-box p { line-height: 1.8; font-size: 1.05rem; margin-bottom: 15px; color: #a4abb5; }
+        .quote-box { background: rgba(0,0,0,0.3); border-left: 3px solid var(--green); padding: 20px; border-radius: 0 12px 12px 0; font-style: italic; color: #fff; margin-top: 25px; }
+
+        /* CADRE VIDÉO DE PRÉSENTATION STYLISÉ (DIMENSIONS ET EFFET NÉON EXACTS) */
+        .video-presentation-box {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 40px;
+            backdrop-filter: blur(15px);
+            margin-bottom: 50px;
+            text-align: center;
+        }
+        .video-presentation-box h2 {
+            font-family: 'Bebas Neue';
+            font-size: 2.8rem;
+            color: #fff;
+            margin-bottom: 25px;
+            letter-spacing: 1px;
+        }
+        .video-container-frame {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            padding-bottom: 56.25%; /* Ratio 16:9 parfait */
+            height: 0;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 2px solid var(--green);
+            box-shadow: 0 0 30px var(--neon-glow), inset 0 0 15px rgba(46, 204, 113, 0.2);
+            background: #000;
+        }
+        .video-container-frame iframe,
+        .video-container-frame video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            object-fit: cover;
+        }
+
+        .tier-title { color: var(--green); font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 3px; margin: 35px 0 20px 0; text-align: center; }
+
+        .roster-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 280px)); gap: 25px; justify-content: center; }
+        .member-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 30px 20px; text-align: center; backdrop-filter: blur(15px); transition: transform 0.3s, border-color 0.3s; position: relative; cursor: pointer; }
+        .member-card:hover { transform: translateY(-5px); border-color: var(--green); }
+        .member-img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--green); margin: 0 auto 15px auto; display: block; }
+
+        #admin-floating-bar {
+            position: fixed; bottom: 20px; right: 20px;
+            background: rgba(15, 18, 22, 0.92); border: 1px solid rgba(46, 204, 113, 0.4);
+            padding: 10px 16px; border-radius: 14px; z-index: 9999; display: none; align-items: center; gap: 10px;
+            backdrop-filter: blur(15px); box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+        }
+        .admin-floating-btn {
+            background: rgba(46, 204, 113, 0.15); color: var(--green); border: 1px solid rgba(46, 204, 113, 0.3);
+            padding: 7px 12px; border-radius: 8px; font-weight: 700; font-size: 11px; cursor: pointer;
+            display: flex; align-items: center; gap: 6px; text-transform: uppercase; transition: all 0.2s ease;
+        }
+        .admin-floating-btn:hover { background: var(--green); color: #000; box-shadow: 0 0 10px rgba(46, 204, 113, 0.4); }
+
+        .modal { position: fixed; inset: 0; background: rgba(9,11,13,0.85); backdrop-filter: blur(10px); z-index: 20000; display: none; align-items: center; justify-content: center; }
+        .modal-content { background: var(--card2); border: 1px solid rgba(46,204,113,0.3); padding: 35px; border-radius: 20px; width: 90%; max-width: 420px; }
+        .modal-content h3 { font-family: 'Bebas Neue'; font-size: 2rem; color: #fff; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 12px; color: #7f8691; margin-bottom: 6px; font-weight: 600; }
+        .form-group input, .form-group select { width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 10px; color: #fff; font-family: inherit; outline: none; }
+        .form-group input:focus, .form-group select:focus { border-color: var(--green); }
+        .modal-btns { display: flex; gap: 10px; margin-top: 20px; }
+        .btn { flex: 1; padding: 12px; border-radius: 10px; font-weight: 700; border: none; cursor: pointer; text-transform: uppercase; font-size: 12px; }
+        .btn-submit { background: var(--green); color: #000; }
+        .btn-cancel { background: rgba(255,255,255,0.08); color: #fff; }
+        .btn-delete { background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid rgba(231, 76, 60, 0.4); }
+        .btn-delete:hover { background: #e74c3c; color: #fff; }
+
+        .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.8s, transform 0.8s; }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+
+        footer { background: rgba(9, 11, 13, 0.8); backdrop-filter: blur(15px); border-top: 1px solid var(--border); padding: 50px 6% 25px 6%; margin-top: 80px; text-align: center; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+    <!-- ANIMATION D'OUVERTURE PROGRESSIVE -->
+    <div id="intro-splash">
+        <div class="splash-panel splash-left"></div>
+        <div class="splash-panel splash-right"></div>
+        <div class="splash-content">
+            <div class="splash-logo-container">
+                <img src="https://r2.fivemanage.com/yn4c41n5WF0bvUIcGBLe9/krizix_logo_copie-removebg-preview.png" alt="Krizix Logo">
+            </div>
+            <h2>KRIZIX ESPORT</h2>
+        </div>
+    </div>
+
+    <canvas id="bg-canvas"></canvas>
+
+    <nav>
+        <a href="index.html" class="logo-wrap">
+            <img src="https://r2.fivemanage.com/yn4c41n5WF0bvUIcGBLe9/krizix_logo_copie-removebg-preview.png" alt="Krizix Logo">
+            <span>Krizix Esport</span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="index.html" data-fr="Accueil" data-en="Home">Accueil</a></li>
+            <li><a href="club.html" class="active" data-fr="Le Club" data-en="The Club">Le Club</a></li>
+            <li class="dropdown">
+                <a href="#" data-fr="Rosters" data-en="Rosters">Rosters <i class="fa-solid fa-chevron-down" style="font-size:10px;"></i></a>
+                <div class="dropdown-content">
+                    <a href="roster-fortnite.html"><img src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/Fortnite_F_lettermark_logo(1).png" class="game-nav-icon" alt="Fortnite"> Fortnite</a>
+                    <a href="roster-rl.html"><img src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/avt5ka5bd-removebg-preview.png" class="game-nav-icon" alt="Rocket League"> Rocket League</a>
+                    <a href="roster-valorant.html"><img src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/tlcharg(10).jpg" class="game-nav-icon" alt="Valorant"> Valorant</a>
+                    <a href="roster-minecraft.html"><img src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/png-clipartminecraft-youtube-logo-png-green-minecraft-icon-branding5511673-thumbnail-removebg-preview.png" class="game-nav-icon" alt="Minecraft"> Minecraft</a>
+                    <a href="roster-r6.html"><img src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/product-E1063325_3-removebg-preview.png" class="game-nav-icon" alt="Rainbow Six Siege"> Rainbow Six Siege</a>
+                    <a href="roster-apex.html"><img src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/Apex-Legends-Logo-PNG-Download-Image-removebg-preview.png" class="game-nav-icon" alt="Apex Legends"> Apex Legends</a>
+                </div>
+            </li>
+            <li><a href="boutique.html" data-fr="Boutique" data-en="Shop">Boutique</a></li>
+            <li><button class="theme-switch" onclick="toggleTheme()" title="Changer de couleur (Vert / Bleu)"><i class="fa-solid fa-palette"></i> <span id="theme-name-label">Vert</span></button></li>
+            <li><button class="lang-switch" onclick="toggleLanguage()">FR / EN</button></li>
+            <li id="auth-nav-item">
+                <button class="btn-discord" onclick="loginWithDiscord()">
+                    <i class="fa-brands fa-discord"></i> Connexion
+                </button>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- BARRE ADMIN FLOTTANTE MISE À JOUR -->
+    <div id="admin-floating-bar">
+        <button class="admin-floating-btn" onclick="openStaffModal()"><i class="fa-solid fa-user-plus"></i> Ajouter Staff</button>
+        <button class="admin-floating-btn" onclick="openVideoModal()"><i class="fa-solid fa-video"></i> Vidéo Club</button>
+    </div>
+
+    <main>
+        <div class="history-box reveal">
+            <h2 data-fr="Notre Histoire & Origines" data-en="Our History & Origins">Notre Histoire & Origines</h2>
+            <p data-fr="<strong>Krizix Esport</strong> est une structure associative évoluant sur plusieurs jeux compétitifs, créée en 2026 en Bretagne par son fondateur <strong>Josko</strong>." data-en="<strong>Krizix Esport</strong> is an associative organization competing in various games, created in 2026 in Brittany by its founder <strong>Josko</strong>."><strong>Krizix Esport</strong> est une structure associative évoluant sur plusieurs jeux compétitifs, créée en 2026 en Bretagne par son fondateur <strong>Josko</strong>.</p>
+            <p data-fr="Née de la passion pure du jeu vidéo et de la compétition, la Krizix a pour objectif de se développer au sommet de la scène esport francophone tout en conservant une identité familiale basée sur le respect, la cohésion et la performance." data-en="Born from pure passion for video games and competition, Krizix aims to rise to the top of the French-speaking esports scene while keeping a family identity based on respect, cohesion, and performance.">Née de la passion pure du jeu vidéo et de la compétition, la Krizix a pour objectif de se développer au sommet de la scène esport francophone tout en conservant une identité familiale basée sur le respect, la cohésion et la performance.</p>
+            <div class="quote-box" data-fr="&quot;Rejoignez l'aventure et portez fièrement les couleurs du Koala !&quot; 🖤💚🤍 — Josko" data-en="&quot;Join the adventure and proudly wear the Koala colors!&quot; 🖤💚🤍 — Josko">
+                "Rejoignez l'aventure et portez fièrement les couleurs du Koala !" 🖤💚🤍 — Josko
+            </div>
+        </div>
+
+        <!-- CADRE VIDÉO DE PRÉSENTATION STYLISÉ (APPARAÎT SEULEMENT SI UN LIEN EST RENSEIGNÉ) -->
+        <div class="video-presentation-box reveal" id="presentation-video-wrapper" style="display: none;">
+            <h2 data-fr="Découvrez Krizix Esport en Vidéo" data-en="Discover Krizix Esport in Video">Découvrez Krizix Esport en Vidéo</h2>
+            <div class="video-container-frame" id="video-frame-container">
+                <!-- La vidéo s'injectera dynamiquement ici -->
+            </div>
+        </div>
+
+        <h2 style="font-family:'Bebas Neue'; font-size:3rem; color:#fff; text-align:center; margin-bottom:30px;" class="reveal" data-fr="Organigramme du Staff" data-en="Staff Organization Chart">Organigramme du Staff</h2>
+
+        <div class="tier-title reveal" data-fr="CEO" data-en="CEO">CEO</div>
+        <div class="roster-grid reveal" id="grid-ceo"></div>
+
+        <div class="tier-title reveal" data-fr="Direction Générale" data-en="Executive Board">Direction Générale</div>
+        <div class="roster-grid reveal" id="grid-direction"></div>
+
+        <div class="tier-title reveal" data-fr="Staff Administratif" data-en="Administrative Staff">Staff Administratif</div>
+        <div class="roster-grid reveal" id="grid-staff"></div>
+    </main>
+
+    <!-- MODALE GESTION MEMBRE STAFF -->
+    <div class="modal" id="modal-staff">
+        <div class="modal-content">
+            <h3 id="modal-staff-title">Modifier le Membre</h3>
+            <input type="hidden" id="staff-id">
+            <div class="form-group">
+                <label>Nom / Pseudo</label>
+                <input type="text" id="staff-name-input" placeholder="Ex: Josko">
+            </div>
+            <div class="form-group">
+                <label>Rôle</label>
+                <input type="text" id="staff-role-input" placeholder="Ex: CEO, Modérateur, Graphiste...">
+            </div>
+            <div class="form-group">
+                <label>Pôle / Section</label>
+                <select id="staff-tier-input">
+                    <option value="ceo">CEO</option>
+                    <option value="direction">Direction Générale</option>
+                    <option value="staff">Staff Administratif</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>URL de la photo de profil</label>
+                <input type="text" id="staff-img-input" placeholder="Ex: https://image.png">
+            </div>
+            <div class="modal-btns">
+                <button class="btn btn-delete" id="btn-delete-staff" onclick="deleteStaffMember()" style="display:none;"><i class="fa-solid fa-trash"></i> Supprimer</button>
+                <button class="btn btn-cancel" onclick="closeStaffModal()">Annuler</button>
+                <button class="btn btn-submit" onclick="saveStaffMember()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE GESTION VIDÉO DE PRÉSENTATION -->
+    <div class="modal" id="modal-video">
+        <div class="modal-content">
+            <h3>Vidéo de Présentation</h3>
+            <div class="form-group">
+                <label>Lien de la Vidéo (YouTube embed, lien direct, etc.)</label>
+                <input type="text" id="club-video-input" placeholder="Ex: https://www.youtube.com/embed/XXXXX">
+            </div>
+            <div class="modal-btns">
+                <button class="btn btn-delete" onclick="removeClubVideo()" style="background:rgba(231,76,60,0.2); color:#e74c3c;"><i class="fa-solid fa-trash"></i> Retirer</button>
+                <button class="btn btn-cancel" onclick="closeVideoModal()">Annuler</button>
+                <button class="btn btn-submit" onclick="saveClubVideo()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <footer data-fr="&copy; 2026 Krizix Esport. Tous droits réservés." data-en="&copy; 2026 Krizix Esport. All rights reserved.">
+        &copy; 2026 Krizix Esport. Tous droits réservés.
+    </footer>
+
+    <script>
+        // --- GESTION DU THÈME GLOBAL DU SITE (VERT / BLEU ET NÉONS) ---
+        function toggleTheme() {
+            const currentTheme = localStorage.getItem('krizix_theme') || 'green';
+            const newTheme = currentTheme === 'green' ? 'blue' : 'green';
+            applyTheme(newTheme);
+        }
+
+        function applyTheme(themeName) {
+            localStorage.setItem('krizix_theme', themeName);
+            
+            const root = document.documentElement;
+            let mainColor, neonShadow;
+
+            if (themeName === 'blue') {
+                mainColor = '#3498db'; 
+                neonShadow = 'rgba(52, 152, 219, 0.6)';
+                if(document.getElementById('theme-name-label')) document.getElementById('theme-name-label').innerText = 'Bleu';
+            } else {
+                mainColor = '#2ecc71'; 
+                neonShadow = 'rgba(46, 204, 113, 0.6)';
+                if(document.getElementById('theme-name-label')) document.getElementById('theme-name-label').innerText = 'Vert';
+            }
+
+            root.style.setProperty('--green', mainColor);
+            root.style.setProperty('--accent-color', mainColor);
+            root.style.setProperty('--neon-glow', neonShadow);
+        }
+
+        const savedTheme = localStorage.getItem('krizix_theme') || 'green';
+        applyTheme(savedTheme);
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const splashLeft = document.querySelector('.splash-left');
+            const splashRight = document.querySelector('.splash-right');
+            const splashLogoContainer = document.querySelector('.splash-logo-container');
+            const splashTitle = document.querySelector('.splash-content h2');
+
+            const currentTheme = localStorage.getItem('krizix_theme');
+            let themeColor = '#3498db';
+
+            if (currentTheme === 'green') {
+                themeColor = '#2ecc71';
+            } else if (currentTheme === 'blue') {
+                themeColor = '#3498db';
+            } else {
+                const activeUser = JSON.parse(localStorage.getItem('krizix_user') || '{}');
+                if (activeUser && activeUser.id) {
+                    const customCol = localStorage.getItem(`krizix_profile_color_${activeUser.id}`);
+                    if (customCol) themeColor = customCol;
+                }
+            }
+
+            if (splashLeft) splashLeft.style.borderRightColor = themeColor;
+            if (splashRight) splashRight.style.borderLeftColor = themeColor;
+            if (splashLogoContainer) splashLogoContainer.style.borderColor = themeColor;
+            if (splashTitle) splashTitle.style.textShadow = `0 0 20px ${themeColor}`;
+        });
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg-canvas'), alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        const pGeometry = new THREE.BufferGeometry();
+        const pCount = 2500;
+        const pPositions = new Float32Array(pCount * 3);
+        for(let i=0; i<pCount*3; i++) { pPositions[i] = (Math.random() - 0.5) * 50; }
+        pGeometry.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
+        const pMaterial = new THREE.PointsMaterial({ color: 0x2ecc71, size: 0.08, transparent: true, opacity: 0.25 });
+        const particleSystem = new THREE.Points(pGeometry, pMaterial);
+        scene.add(particleSystem);
+        camera.position.z = 18;
+
+        function animateBg() { requestAnimationFrame(animateBg); particleSystem.rotation.y += 0.0008; renderer.render(scene, camera); }
+        animateBg();
+
+        // FONCTION DE LOG EXACTE FORMAT "ACTION ADMIN"
+        function sendClubAdminLog(actionTitle, beforeData, afterData, simpleDetails = null) {
+            const savedUser = JSON.parse(localStorage.getItem('krizix_user') || '{}');
+            const author = savedUser.username || savedUser.global_name || savedUser.name || "Administrateur";
+
+            let contentDetails = simpleDetails;
+            if (!contentDetails && beforeData && afterData) {
+                contentDetails = `**Avant :**\n${beforeData}\n\n**Après :**\n${afterData}`;
+            }
+
+            fetch('http://fi4.bot-hosting.cloud:25145/api/send-log', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: author,
+                    action: actionTitle,
+                    before: beforeData,
+                    after: afterData,
+                    details: contentDetails || "Aucun détail fourni"
+                })
+            })
+            .catch(err => console.error("Erreur log :", err));
+        }
+
+        // --- GESTION DE LA VIDÉO DE PRÉSENTATION ---
+        function renderClubVideo() {
+            const videoUrl = localStorage.getItem('krizix_club_video_url');
+            const wrapper = document.getElementById('presentation-video-wrapper');
+            const container = document.getElementById('video-frame-container');
+            if (!wrapper || !container) return;
+
+            if (videoUrl && videoUrl.trim() !== '') {
+                wrapper.style.display = 'block';
+                let embedSrc = videoUrl.trim();
+                if (embedSrc.includes('watch?v=')) {
+                    embedSrc = embedSrc.replace('watch?v=', 'embed/');
+                } else if (embedSrc.includes('youtu.be/')) {
+                    embedSrc = embedSrc.replace('youtu.be/', 'www.youtube.com/embed/');
+                }
+
+                container.innerHTML = `<iframe src="${embedSrc}" allowfullscreen></iframe>`;
+            } else {
+                wrapper.style.display = 'none';
+                container.innerHTML = '';
+            }
+        }
+
+        function openVideoModal() {
+            const currentUrl = localStorage.getItem('krizix_club_video_url') || '';
+            document.getElementById('club-video-input').value = currentUrl;
+            document.getElementById('modal-video').style.display = 'flex';
+        }
+
+        function closeVideoModal() {
+            document.getElementById('modal-video').style.display = 'none';
+        }
+
+        function saveClubVideo() {
+            const oldUrl = localStorage.getItem('krizix_club_video_url') || 'Aucune';
+            const newUrl = document.getElementById('club-video-input').value.trim();
+
+            localStorage.setItem('krizix_club_video_url', newUrl);
+            sendClubAdminLog("Action Admin - Vidéo Club Modifiée", null, null, `A mis à jour la vidéo de présentation du club :\n• Ancien lien : "${oldUrl}"\n• Nouveau lien : "${newUrl || 'Aucun'}"`);
+            
+            closeVideoModal();
+            renderClubVideo();
+        }
+
+        function removeClubVideo() {
+            const oldUrl = localStorage.getItem('krizix_club_video_url') || 'Aucune';
+            localStorage.removeItem('krizix_club_video_url');
+            sendClubAdminLog("Action Admin - Vidéo Club Supprimée", null, null, `A supprimé la vidéo de présentation du club (Ancien lien : "${oldUrl}").`);
+            
+            closeVideoModal();
+            renderClubVideo();
+        }
+
+        const defaultRoster = [
+            { id: 1, name: "Josko", role: "CEO", tier: "ceo", img: "https://r2.fivemanage.com/yn4c41n5WF0bvUIcGBLe9/Captured'cran2026-10-10232732.png" },
+            { id: 2, name: "Stryxen", role: "Modérateur", tier: "staff", img: "https://r2.fivemanage.com/yn4c41n5WF0bvUIcGBLe9/Captured'cran2026-10-10232844.png" },
+            { id: 3, name: "Novix", role: "Graphiste", tier: "staff", img: "https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/87f0346282e92ad01df125d884c8244c.png" }
+        ];
+
+        let roster = JSON.parse(localStorage.getItem('krizix_roster')) || defaultRoster;
+
+        function renderRoster() {
+            const poles = { ceo: [], direction: [], staff: [] };
+            roster.forEach(m => { 
+                if(poles[m.tier]) poles[m.tier].push(m);
+                else poles['staff'].push(m); 
+            });
+
+            const makeCard = m => `
+                <div class="member-card" onclick="openStaffModal(${m.id})">
+                    <img class="member-img" src="${m.img || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'}" alt="${m.name}">
+                    <h3 style="color:#fff;">${m.name}</h3>
+                    <p style="color:var(--green); font-size:12px; margin-top:4px; font-weight:700; text-transform:uppercase;">${m.role}</p>
+                </div>
+            `;
+            document.getElementById('grid-ceo').innerHTML = poles.ceo.length ? poles.ceo.map(makeCard).join('') : '<p style="text-align:center; color:#666;">Aucun membre CEO</p>';
+            document.getElementById('grid-direction').innerHTML = poles.direction.length ? poles.direction.map(makeCard).join('') : '<p style="text-align:center; color:#666;">Aucun membre dans la Direction Générale</p>';
+            document.getElementById('grid-staff').innerHTML = poles.staff.length ? poles.staff.map(makeCard).join('') : '<p style="text-align:center; color:#666;">Aucun membre dans le Staff</p>';
+        }
+
+        function openStaffModal(id = null, defaultTier = 'ceo') {
+            const savedUser = localStorage.getItem('krizix_user');
+            const ADMIN_IDS = ["1078676804010770512", "1222520269550260246", "883405254761267243"];
+            let isAdmin = false;
+            if (savedUser) {
+                try {
+                    const user = JSON.parse(savedUser);
+                    if (user && user.id && ADMIN_IDS.includes(String(user.id))) isAdmin = true;
+                } catch(e) {}
+            }
+
+            if (id !== null && !isAdmin) return;
+
+            const deleteBtn = document.getElementById('btn-delete-staff');
+            if (id) {
+                const member = roster.find(m => m.id === id);
+                if (!member) return;
+                document.getElementById('modal-staff-title').innerText = "Modifier le Membre";
+                document.getElementById('staff-id').value = member.id;
+                document.getElementById('staff-name-input').value = member.name;
+                document.getElementById('staff-role-input').value = member.role;
+                document.getElementById('staff-tier-input').value = member.tier || 'ceo';
+                document.getElementById('staff-img-input').value = member.img || '';
+                deleteBtn.style.display = 'block';
+            } else {
+                if (!isAdmin) return;
+                document.getElementById('modal-staff-title').innerText = "Ajouter un Membre";
+                document.getElementById('staff-id').value = '';
+                document.getElementById('staff-name-input').value = '';
+                document.getElementById('staff-role-input').value = '';
+                document.getElementById('staff-tier-input').value = defaultTier;
+                document.getElementById('staff-img-input').value = '';
+                deleteBtn.style.display = 'none';
+            }
+            document.getElementById('modal-staff').style.display = 'flex';
+        }
+
+        function closeStaffModal() { document.getElementById('modal-staff').style.display = 'none'; }
+
+        function saveStaffMember() {
+            const id = document.getElementById('staff-id').value;
+            const name = document.getElementById('staff-name-input').value.trim() || 'Membre';
+            const role = document.getElementById('staff-role-input').value.trim() || 'Staff';
+            const tier = document.getElementById('staff-tier-input').value;
+            const img = document.getElementById('staff-img-input').value.trim();
+
+            if (id) {
+                const oldMember = roster.find(m => m.id == id);
+                if (oldMember) {
+                    let changes = [];
+                    if (oldMember.name !== name) changes.push(`• Nom : "${oldMember.name}" ➔ "${name}"`);
+                    if (oldMember.role !== role) changes.push(`• Rôle : "${oldMember.role}" ➔ "${role}"`);
+                    if (oldMember.tier !== tier) changes.push(`• Tier : "${oldMember.tier}" ➔ "${tier}"`);
+                    
+                    if (oldMember.img !== img) {
+                        changes.push(`• Ancienne Image :\n${oldMember.img || 'Aucune'}\n• Nouvelle Image :\n${img || 'Aucune'}`);
+                    }
+
+                    oldMember.name = name;
+                    oldMember.role = role;
+                    oldMember.tier = tier;
+                    oldMember.img = img;
+
+                    const detailsTxt = `A mis à jour le membre ${oldMember.name} :\n${changes.length > 0 ? changes.join('\n') : 'Aucune modification'}`;
+                    sendClubAdminLog("Action Admin - Membre Modifié", null, null, detailsTxt);
+                }
+            } else {
+                roster.push({ id: Date.now(), name, role, tier, img });
+                const detailsTxt = `A ajouté le nouveau membre ${name} :\n• Rôle : "${role}"\n• Tier : "${tier}"\n• Image :\n${img || 'Aucune'}`;
+                sendClubAdminLog("Action Admin - Membre Ajouté", null, null, detailsTxt);
+            }
+
+            localStorage.setItem('krizix_roster', JSON.stringify(roster));
+            closeStaffModal();
+            renderRoster();
+        }
+
+        function deleteStaffMember() {
+            const id = document.getElementById('staff-id').value;
+            if (!id) return;
+
+            const memberToDelete = roster.find(m => m.id == id);
+            roster = roster.filter(m => m.id != id);
+            localStorage.setItem('krizix_roster', JSON.stringify(roster));
+
+            const detailsTxt = `A supprimé le membre ${memberToDelete ? memberToDelete.name : 'Inconnu'} :\n• Rôle : "${memberToDelete ? memberToDelete.role : 'N/A'}"\n• Tier : "${memberToDelete ? memberToDelete.tier : 'N/A'}"\n• Image :\n${memberToDelete && memberToDelete.img ? memberToDelete.img : 'Aucune'}`;
+            
+            sendClubAdminLog("Action Admin - Membre Supprimé", null, null, detailsTxt);
+
+            closeStaffModal();
+            renderRoster();
+        }
+
+        let currentLang = localStorage.getItem('krizix_lang') || 'fr';
+        function applyLanguage() { document.querySelectorAll('[data-fr]').forEach(el => { el.innerHTML = el.getAttribute('data-' + currentLang); }); }
+        function toggleLanguage() { currentLang = currentLang === 'fr' ? 'en' : 'fr'; localStorage.setItem('krizix_lang', currentLang); applyLanguage(); }
+        
+        renderRoster();
+        renderClubVideo();
+        applyLanguage();
+
+        const io = new IntersectionObserver(entries => { entries.forEach(e => { if(e.isIntersecting) { e.target.classList.add('visible'); } }); }, { threshold: 0.1 });
+        document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+    </script>
+    <script src="auth.js"></script>
+</body>
+</html>

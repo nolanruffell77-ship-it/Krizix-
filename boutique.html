@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boutique Officielle | Krizix Esport</title>
+    <link rel="icon" href="https://r2.fivemanage.com/yn4c41n5WF0bvUIcGBLe9/krizix_logo_copie-removebg-preview.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <style>
+        :root { 
+            --bg: #090b0d; 
+            --card: rgba(17, 20, 23, 0.55); 
+            --card2: rgba(22, 26, 30, 0.85); 
+            --text: #8a9099; 
+            --white: #ffffff; 
+            --green: #2ecc71; 
+            --accent-color: #2ecc71;
+            --neon-glow: rgba(46, 204, 113, 0.5);
+            --border: rgba(255, 255, 255, 0.06); 
+            --blue: #3498db; 
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; min-height: 100vh; }
+
+        #bg-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; }
+
+        nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; display: flex; justify-content: space-between; align-items: center; padding: 0 6%; height: 75px; background: rgba(9, 11, 13, 0.6); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
+        .logo-wrap { display: flex; align-items: center; text-decoration: none; color: var(--white) !important; }
+        .logo-wrap img { height: 50px; margin-right: 10px; }
+        .logo-wrap span { font-family: 'Bebas Neue'; font-size: 26px; color: var(--white); letter-spacing: 1px; }
+        
+        .nav-links { display: flex; list-style: none; gap: 28px; align-items: center; }
+        .nav-links a { text-decoration: none; color: var(--text); font-weight: 600; text-transform: uppercase; font-size: 13px; letter-spacing: .5px; transition: color 0.25s; position: relative; }
+        .nav-links a::after { content: ''; position: absolute; left: 0; bottom: -4px; width: 0; height: 2px; background: var(--green); transition: width 0.3s; }
+        .nav-links a:hover, .nav-links a.active { color: var(--white) !important; }
+        .nav-links a:hover::after, .nav-links a.active::after { width: 100%; }
+
+        .dropdown { position: relative; padding: 10px 0; }
+        .dropdown-content { display: none; position: absolute; top: 100%; left: 0; background: var(--card2); min-width: 200px; border-radius: 12px; padding: 10px 0; border: 1px solid var(--border); backdrop-filter: blur(15px); }
+        .dropdown:hover .dropdown-content { display: block; }
+        .dropdown-content a { display: flex !important; align-items: center; gap: 10px; padding: 10px 20px; font-size: 13px; text-transform: none; color: var(--text) !important; }
+        .dropdown-content a::after { display: none; }
+        .dropdown-content a:hover { color: var(--green) !important; background: rgba(255,255,255,0.02); }
+        .game-nav-icon { width: 18px; height: 18px; object-fit: contain; border-radius: 3px; }
+
+        .lang-switch, .theme-switch { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--white); padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: 700; transition: all 0.3s; display: inline-flex; align-items: center; gap: 6px; }
+        .lang-switch:hover, .theme-switch:hover { border-color: var(--green); color: var(--green); box-shadow: 0 0 10px var(--neon-glow); }
+        
+        .btn-discord { background: transparent; color: var(--white) !important; border: 1.5px solid rgba(255,255,255,0.15); padding: 9px 22px; border-radius: 50px; text-transform: uppercase; font-weight: 700; font-size: 12px; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+        .btn-discord:hover { background: var(--green) !important; color: #000000 !important; border-color: var(--green) !important; box-shadow: 0 0 15px var(--neon-glow); }
+
+        main { max-width: 1200px; margin: 120px auto 60px auto; padding: 0 25px; }
+
+        .shop-header { display: flex; justify-content: center; align-items: center; margin-bottom: 30px; position: relative; width: 100%; }
+        .shop-header h1 { font-family: 'Bebas Neue'; font-size: 4.5rem; color: #fff; text-align: center; margin: 0; }
+
+        #admin-floating-bar {
+            position: fixed; bottom: 20px; right: 20px;
+            background: rgba(15, 18, 22, 0.92); border: 1px solid rgba(46, 204, 113, 0.4);
+            padding: 10px 16px; border-radius: 14px; z-index: 9999; display: none; align-items: center; gap: 10px;
+            backdrop-filter: blur(15px); box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+        }
+        .admin-floating-btn {
+            background: rgba(46, 204, 113, 0.15); color: var(--green); border: 1px solid rgba(46, 204, 113, 0.3);
+            padding: 7px 12px; border-radius: 8px; font-weight: 700; font-size: 11px; cursor: pointer;
+            display: flex; align-items: center; gap: 6px; text-transform: uppercase; transition: all 0.2s ease;
+        }
+        .admin-floating-btn:hover { background: var(--green); color: #000; box-shadow: 0 0 10px rgba(46, 204, 113, 0.4); }
+
+        .filter-bar { display: flex; justify-content: center; gap: 12px; margin-bottom: 40px; flex-wrap: wrap; }
+        .filter-btn { background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--text); padding: 8px 20px; border-radius: 30px; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.3s; }
+        .filter-btn:hover, .filter-btn.active { background: var(--green); color: #000; border-color: var(--green); font-weight: 700; }
+
+        .shop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 360px)); gap: 30px; justify-content: center; }
+        .product-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; backdrop-filter: blur(15px); display: flex; flex-direction: column; justify-content: space-between; position: relative; transition: transform 0.3s, border-color 0.3s; cursor: pointer; }
+        .product-card:hover { transform: translateY(-6px); border-color: var(--green); }
+        
+        .product-badge { position: absolute; top: 15px; left: 15px; background: var(--green); color: #000; font-size: 10px; font-weight: 800; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; z-index: 5; letter-spacing: 0.5px; }
+        .product-badge.nouveau { background: #e74c3c; color: #fff; }
+        .product-badge.exclusif { background: #9b59b6; color: #fff; }
+
+        .product-img { width: 100%; height: 190px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 15px; background: rgba(0,0,0,0.3); position: relative; }
+        .product-img img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.5s; }
+        .product-card:hover .product-img img { transform: scale(1.05); }
+
+        .product-title { font-size: 1.15rem; color: #fff; font-weight: 700; margin-bottom: 6px; }
+        .product-desc { font-size: 12px; line-height: 1.5; color: var(--text); margin-bottom: 15px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .product-price { font-family: 'Bebas Neue'; font-size: 1.8rem; color: var(--blue); }
+
+        .btn-view { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: rgba(255,255,255,0.06); color: var(--white); border: 1px solid var(--border); padding: 8px 16px; border-radius: 50px; font-weight: 700; text-transform: uppercase; font-size: 11px; transition: all 0.3s; }
+        .product-card:hover .btn-view { background: var(--green); color: #000; border-color: var(--green); }
+        
+        .admin-controls { position: absolute; top: 15px; right: 15px; display: none; gap: 8px; z-index: 10; }
+        .admin-btn { background: rgba(0,0,0,0.7); color: #fff; border: 1px solid var(--border); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; }
+        .admin-btn.edit-btn:hover { background: var(--green); color: #000; border-color: var(--green); }
+        .admin-btn.del-btn { color: #e74c3c; border-color: rgba(231, 76, 60, 0.4); }
+        .admin-btn.del-btn:hover { background: #e74c3c; color: #fff; }
+
+        .modal { position: fixed; inset: 0; background: rgba(9,11,13,0.85); backdrop-filter: blur(10px); z-index: 20000; display: none; align-items: center; justify-content: center; }
+        .modal-content { background: var(--card2); border: 1px solid rgba(46,204,113,0.3); padding: 35px; border-radius: 20px; width: 90%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
+        .modal-content h3 { font-family: 'Bebas Neue'; font-size: 2rem; color: #fff; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 12px; color: #7f8691; margin-bottom: 6px; font-weight: 600; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 10px; color: #fff; font-family: inherit; resize: none; outline: none; }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--green); }
+        .modal-btns { display: flex; gap: 10px; margin-top: 20px; }
+        .btn { flex: 1; padding: 12px; border-radius: 10px; font-weight: 700; border: none; cursor: pointer; text-transform: uppercase; font-size: 12px; }
+        .btn-submit { background: var(--green); color: #000; }
+        .btn-cancel { background: rgba(255,255,255,0.08); color: #fff; }
+
+        .quickview-img { width: 100%; height: 230px; object-fit: cover; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
+        .btn-download-big { display: flex; width: 100%; align-items: center; justify-content: center; gap: 10px; background: var(--blue); color: #fff !important; padding: 14px; border-radius: 50px; text-decoration: none; font-weight: 800; text-transform: uppercase; font-size: 14px; transition: all 0.3s; margin-top: 20px; }
+        .btn-download-big:hover { background: #2980b9; transform: translateY(-2px); }
+
+        .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.8s, transform 0.8s; }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+
+        footer { background: rgba(9, 11, 13, 0.8); backdrop-filter: blur(15px); border-top: 1px solid var(--border); padding: 50px 6% 25px 6%; margin-top: 80px; text-align: center; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+    <canvas id="bg-canvas"></canvas>
+
+    <nav>
+        <a href="index.html" class="logo-wrap">
+            <img src="https://r2.fivemanage.com/yn4c41n5WF0bvUIcGBLe9/krizix_logo_copie-removebg-preview.png" alt="Krizix Logo">
+            <span>Krizix Esport</span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="index.html" data-fr="Accueil" data-en="Home">Accueil</a></li>
+            <li><a href="club.html" data-fr="Le Club" data-en="The Club">Le Club</a></li>
+            <li class="dropdown">
+                <a href="#" data-fr="Rosters" data-en="Rosters">Rosters <i class="fa-solid fa-chevron-down" style="font-size:10px;"></i></a>
+                <div class="dropdown-content">
+                    <a href="roster-fortnite.html"><img src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/Fortnite_F_lettermark_logo(1).png" class="game-nav-icon" alt="Fortnite"> Fortnite</a>
+                    <a href="roster-rl.html"><img src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/avt5ka5bd-removebg-preview.png" class="game-nav-icon" alt="Rocket League"> Rocket League</a>
+                    <a href="roster-valorant.html"><img src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/tlcharg(10).jpg" class="game-nav-icon" alt="Valorant"> Valorant</a>
+                    <a href="roster-minecraft.html"><img src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/png-clipartminecraft-youtube-logo-png-green-minecraft-icon-branding5511673-thumbnail-removebg-preview.png" class="game-nav-icon" alt="Minecraft"> Minecraft</a>
+                    <a href="roster-r6.html"><img src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/product-E1063325_3-removebg-preview.png" class="game-nav-icon" alt="Rainbow Six Siege"> Rainbow Six Siege</a>
+                    <a href="roster-apex.html"><img src="https://r2.fivemanage.com/ertC6YGygtOAcgjrGF7nb/Apex-Legends-Logo-PNG-Download-Image-removebg-preview.png" class="game-nav-icon" alt="Apex Legends"> Apex Legends</a>
+                </div>
+            </li>
+            <li><a href="boutique.html" class="active" data-fr="Boutique" data-en="Shop">Boutique</a></li>
+            <li><button class="theme-switch" onclick="toggleTheme()" title="Changer de couleur (Vert / Bleu)"><i class="fa-solid fa-palette"></i> <span id="theme-name-label">Vert</span></button></li>
+            <li><button class="lang-switch" onclick="toggleLanguage()">FR / EN</button></li>
+            <li id="auth-nav-item">
+                <button class="btn-discord" onclick="loginWithDiscord()">
+                    <i class="fa-brands fa-discord"></i> Connexion
+                </button>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- BARRE D'ADMINISTRATION FLOTTANTE EN BAS À DROITE -->
+    <div id="admin-floating-bar">
+        <button class="admin-floating-btn" onclick="openShopModal()"><i class="fa-solid fa-plus"></i> Ajouter Article</button>
+    </div>
+
+    <main>
+        <div class="shop-header reveal">
+            <h1 data-fr="Items <span>Disponibles</span>" data-en="<span>Available</span> Items">Items <span>Disponibles</span></h1>
+        </div>
+
+        <div class="filter-bar reveal">
+            <button class="filter-btn active" onclick="filterCategory('all', this)" data-fr="Tous" data-en="All">Tous</button>
+            <button class="filter-btn" onclick="filterCategory('decal', this)" data-fr="Decals / Skins" data-en="Decals / Skins">Decals / Skins</button>
+            <button class="filter-btn" onclick="filterCategory('overlay', this)" data-fr="Overlays / Graphisme" data-en="Overlays / Graphics">Overlays / Graphisme</button>
+            <button class="filter-btn" onclick="filterCategory('merch', this)" data-fr="Merch / Vêtements" data-en="Merch / Apparel">Merch / Vêtements</button>
+        </div>
+
+        <div class="shop-grid" id="shop-container"></div>
+    </main>
+
+    <!-- FENÊTRE MODALE AJOUTER / MODIFIER ARTICLE -->
+    <div class="modal" id="modal-shop">
+        <div class="modal-content">
+            <h3 id="modal-shop-title" data-fr="Ajouter un Article" data-en="Add an Item">Ajouter un Article</h3>
+            <input type="hidden" id="edit-product-id">
+            <div class="form-group">
+                <label data-fr="Nom de l'article" data-en="Item Name">Nom de l'article</label>
+                <input type="text" id="shop-title-input" placeholder="Ex: Decal Fennec Krizix">
+            </div>
+            <div class="form-group">
+                <label data-fr="Catégorie" data-en="Category">Catégorie</label>
+                <select id="shop-category-input">
+                    <option value="decal" data-fr="Decals / Skins" data-en="Decals / Skins">Decals / Skins</option>
+                    <option value="overlay" data-fr="Overlays / Graphismes" data-en="Overlays / Graphics">Overlays / Graphics</option>
+                    <option value="merch" data-fr="Merch / Vêtements" data-en="Merch / Apparel">Merch / Vêtements</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label data-fr="Badge (Optionnel)" data-en="Badge (Optional)">Badge (Optionnel)</label>
+                <select id="shop-badge-input">
+                    <option value="" data-fr="Aucun" data-en="None">Aucun</option>
+                    <option value="Gratuit" data-fr="Gratuit" data-en="Free">Gratuit</option>
+                    <option value="Nouveau" data-fr="Nouveau" data-en="New">Nouveau</option>
+                    <option value="Exclusif" data-fr="Exclusif" data-en="Exclusive">Exclusif</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label data-fr="URL de l'image" data-en="Image URL">URL de l'image</label>
+                <input type="text" id="shop-img-input" placeholder="Ex: https://image.png">
+            </div>
+            <div class="form-group">
+                <label data-fr="Description" data-en="Description">Description</label>
+                <textarea id="shop-desc-input" rows="3" placeholder="Description du produit..."></textarea>
+            </div>
+            <div class="form-group">
+                <label data-fr="Prix (ex: Gratuit, 10 €...)" data-en="Price (ex: Free, $10...)">Prix (ex: Gratuit, 10 €...)</label>
+                <input type="text" id="shop-price-input" placeholder="Gratuit">
+            </div>
+            <div class="form-group">
+                <label data-fr="Lien de redirection (Téléchargement / Achat)" data-en="Redirect Link (Download / Purchase)">Lien de redirection (Téléchargement / Achat)</label>
+                <input type="text" id="shop-link-input" placeholder="https://drive.google.com/...">
+            </div>
+            <div class="modal-btns">
+                <button class="btn btn-cancel" onclick="closeShopModal()" data-fr="Annuler" data-en="Cancel">Annuler</button>
+                <button class="btn btn-submit" onclick="saveProduct()" data-fr="Enregistrer" data-en="Save">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FENÊTRE MODALE APERÇU RAPIDE (QUICK VIEW) -->
+    <div class="modal" id="modal-quickview">
+        <div class="modal-content">
+            <h3 id="qv-title">Titre de l'article</h3>
+            <img id="qv-img" class="quickview-img" src="" alt="Aperçu">
+            <p id="qv-desc" style="font-size:13px; line-height:1.6; color:#a4abb5; margin-bottom:15px;"></p>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:12px; color:#7f8691; font-weight:600;" data-fr="Prix :" data-en="Price :">Prix :</span>
+                <span id="qv-price" class="product-price">Gratuit</span>
+            </div>
+            <a id="qv-link" href="#" target="_blank" class="btn-download-big">
+                <i class="fa-solid fa-download"></i> <span data-fr="Télécharger / Obtenir" data-en="Download / Get">Télécharger / Obtenir</span>
+            </a>
+            <div class="modal-btns">
+                <button class="btn btn-cancel" onclick="closeQuickViewModal()" style="margin-top:10px;" data-fr="Fermer" data-en="Close">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <footer data-fr="&copy; 2026 Krizix Esport. Tous droits réservés." data-en="&copy; 2026 Krizix Esport. All rights reserved.">
+        &copy; 2026 Krizix Esport. Tous droits réservés.
+    </footer>
+
+    <script src="auth.js"></script>
+    <script>
+        // --- GESTION DU THÈME GLOBAL DU SITE (VERT / BLEU ET NÉONS) ---
+        function toggleTheme() {
+            const currentTheme = localStorage.getItem('krizix_theme') || 'green';
+            const newTheme = currentTheme === 'green' ? 'blue' : 'green';
+            applyTheme(newTheme);
+        }
+
+        function applyTheme(themeName) {
+            localStorage.setItem('krizix_theme', themeName);
+            
+            const root = document.documentElement;
+            let mainColor, neonShadow;
+
+            if (themeName === 'blue') {
+                mainColor = '#3498db'; // Bleu gaming principal
+                neonShadow = 'rgba(52, 152, 219, 0.6)';
+                if(document.getElementById('theme-name-label')) document.getElementById('theme-name-label').innerText = 'Bleu';
+            } else {
+                mainColor = '#2ecc71'; // Vert Krizix d'origine
+                neonShadow = 'rgba(46, 204, 113, 0.6)';
+                if(document.getElementById('theme-name-label')) document.getElementById('theme-name-label').innerText = 'Vert';
+            }
+
+            root.style.setProperty('--green', mainColor);
+            root.style.setProperty('--accent-color', mainColor);
+            root.style.setProperty('--neon-glow', neonShadow);
+        }
+
+        // Charger le thème global au démarrage
+        const savedTheme = localStorage.getItem('krizix_theme') || 'green';
+        applyTheme(savedTheme);
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg-canvas'), alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        const pGeometry = new THREE.BufferGeometry();
+        const pCount = 2500;
+        const pPositions = new Float32Array(pCount * 3);
+        for(let i=0; i<pCount*3; i++) { pPositions[i] = (Math.random() - 0.5) * 50; }
+        pGeometry.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
+        const pMaterial = new THREE.PointsMaterial({ color: 0x2ecc71, size: 0.08, transparent: true, opacity: 0.25 });
+        const particleSystem = new THREE.Points(pGeometry, pMaterial);
+        scene.add(particleSystem);
+        camera.position.z = 18;
+
+        function animateBg() { requestAnimationFrame(animateBg); particleSystem.rotation.y += 0.0008; renderer.render(scene, camera); }
+        animateBg();
+
+        const defaultProducts = [{
+            id: 1,
+            title: "Decal Fennec — Krizix Edition",
+            category: "decal",
+            badge: "Gratuit",
+            img: "https://r2.fivemanage.com/yn4c41n5WF0bvUIcGBLe9/d7a8fc1f-441a-4d5b-89d0-fd9cbf3230cb.png",
+            desc_fr: "Equipe ta Fennec Rocket League avec les couleurs officielles Krizix. Compatible avec Shift.",
+            desc_en: "Equip your Rocket League Fennec with official Krizix colors. Compatible with Shift.",
+            price_fr: "Gratuit",
+            price_en: "Free",
+            link: "https://drive.google.com/file/d/1PxJ_vHjcKkClnU_UNLrHW9KVVNECuwy4/view?usp=drive_link"
+        }];
+
+        let products = JSON.parse(localStorage.getItem('krizix_shop_products')) || defaultProducts;
+        let currentFilter = 'all';
+
+        const badgeTranslations = {
+            'Gratuit': { fr: 'Gratuit', en: 'Free' },
+            'Nouveau': { fr: 'Nouveau', en: 'New' },
+            'Exclusif': { fr: 'Exclusif', en: 'Exclusive' }
+        };
+
+        // --- VÉRIFICATION STRICTE DES DROITS ADMIN (BASÉE SUR LES ID DISCORD) ---
+        function checkIsAdminUser() {
+            const savedUser = localStorage.getItem('krizix_user');
+            const ADMIN_IDS = ["1078676804010770512", "1222520269550260246", "883405254761267243"];
+            if (savedUser) {
+                try {
+                    const user = JSON.parse(savedUser);
+                    if (user && user.id && ADMIN_IDS.includes(String(user.id))) {
+                        return true;
+                    }
+                } catch(e) {}
+            }
+            return false;
+        }
+
+        function checkAdminDisplay() {
+            const isAdmin = checkIsAdminUser();
+            const floatingBar = document.getElementById('admin-floating-bar');
+            if (floatingBar) { floatingBar.style.display = isAdmin ? 'flex' : 'none'; }
+            document.querySelectorAll('.admin-controls').forEach(ctrl => {
+                ctrl.style.display = isAdmin ? 'flex' : 'none';
+            });
+        }
+
+        function renderProducts() {
+            const container = document.getElementById('shop-container');
+            if (!container) return;
+
+            const filtered = currentFilter === 'all' ? products : products.filter(p => p.category === currentFilter);
+
+            container.innerHTML = filtered.map(p => {
+                let badgeClass = 'product-badge';
+                if (p.badge === 'Nouveau') badgeClass += ' nouveau';
+                if (p.badge === 'Exclusif') badgeClass += ' exclusif';
+
+                const bTextFr = badgeTranslations[p.badge] ? badgeTranslations[p.badge].fr : (p.badge || '');
+                const bTextEn = badgeTranslations[p.badge] ? badgeTranslations[p.badge].en : (p.badge || '');
+
+                const desc = currentLang === 'en' ? (p.desc_en || p.desc_fr || p.desc || '') : (p.desc_fr || p.desc || '');
+                const price = currentLang === 'en' ? (p.price_en || p.price_fr || p.price || '') : (p.price_fr || p.price || '');
+
+                return `
+                <div class="product-card reveal visible" onclick="openQuickView(${p.id})">
+                    <div class="admin-controls" id="admin-ctrl-${p.id}" onclick="event.stopPropagation();">
+                        <div class="admin-btn edit-btn" onclick="openShopModal(${p.id})" title="Modifier l'article"><i class="fa-solid fa-pen"></i></div>
+                        <div class="admin-btn del-btn" onclick="deleteProduct(${p.id})" title="Supprimer l'article"><i class="fa-solid fa-trash"></i></div>
+                    </div>
+                    ${p.badge ? `<div class="${badgeClass}" data-fr="${bTextFr}" data-en="${bTextEn}">${currentLang === 'en' ? bTextEn : bTextFr}</div>` : ''}
+                    <div class="product-img">
+                        <img src="${p.img || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'}" alt="${p.title}">
+                    </div>
+                    <div>
+                        <div class="product-title">${p.title}</div>
+                        <p class="product-desc">${desc}</p>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+                        <div class="product-price">${price}</div>
+                        <div class="btn-view"><i class="fa-solid fa-eye"></i> ${currentLang === 'en' ? 'Preview' : 'Aperçu'}</div>
+                    </div>
+                </div>
+            `;
+            }).join('') || `<div style="grid-column: 1/-1; text-align:center; font-style:italic; padding:40px 0;" data-fr="Aucun article dans cette catégorie." data-en="No items in this category.">Aucun article dans cette catégorie.</div>`;
+
+            checkAdminDisplay();
+        }
+
+        function filterCategory(cat, btn) {
+            currentFilter = cat;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderProducts();
+        }
+
+        function openQuickView(id) {
+            const p = products.find(prod => prod.id === id);
+            if (!p) return;
+            document.getElementById('qv-title').innerText = p.title;
+            document.getElementById('qv-img').src = p.img || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
+            
+            const desc = currentLang === 'en' ? (p.desc_en || p.desc_fr || p.desc || '') : (p.desc_fr || p.desc || '');
+            const price = currentLang === 'en' ? (p.price_en || p.price_fr || p.price || '') : (p.price_fr || p.price || '');
+
+            document.getElementById('qv-desc').innerText = desc || 'Aucune description disponible.';
+            document.getElementById('qv-price').innerText = price;
+            document.getElementById('qv-link').href = p.link || '#';
+            document.getElementById('modal-quickview').style.display = 'flex';
+        }
+
+        function closeQuickViewModal() { document.getElementById('modal-quickview').style.display = 'none'; }
+        
+        function openShopModal(id = null) { 
+            if (!checkIsAdminUser()) return;
+            if (id) {
+                const p = products.find(prod => prod.id === id);
+                if (!p) return;
+                document.getElementById('edit-product-id').value = p.id;
+                document.getElementById('shop-title-input').value = p.title;
+                document.getElementById('shop-category-input').value = p.category || 'decal';
+                document.getElementById('shop-badge-input').value = p.badge || '';
+                document.getElementById('shop-img-input').value = p.img || '';
+                document.getElementById('shop-desc-input').value = p.desc_fr || p.desc || '';
+                document.getElementById('shop-price-input').value = p.price_fr || p.price || '';
+                document.getElementById('shop-link-input').value = p.link || '';
+                document.getElementById('modal-shop-title').innerText = "Modifier l'Article";
+            } else {
+                document.getElementById('edit-product-id').value = '';
+                document.getElementById('shop-title-input').value = '';
+                document.getElementById('shop-category-input').value = 'decal';
+                document.getElementById('shop-badge-input').value = '';
+                document.getElementById('shop-img-input').value = '';
+                document.getElementById('shop-desc-input').value = '';
+                document.getElementById('shop-price-input').value = '';
+                document.getElementById('shop-link-input').value = '';
+                document.getElementById('modal-shop-title').innerText = "Ajouter un Article";
+            }
+            document.getElementById('modal-shop').style.display = 'flex'; 
+        }
+
+        function closeShopModal() { document.getElementById('modal-shop').style.display = 'none'; }
+
+        // --- ENVOI DE LOGS AU FORMAT ACTION ADMIN ---
+        function sendClubAdminLog(actionTitle, detailsText) {
+            const savedUser = JSON.parse(localStorage.getItem('krizix_user') || '{}');
+            const author = savedUser.username || savedUser.global_name || savedUser.name || "Administrateur";
+
+            fetch('http://fi4.bot-hosting.cloud:25145/api/send-log', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: author,
+                    action: actionTitle,
+                    details: detailsText
+                })
+            })
+            .catch(err => console.error("Erreur log :", err));
+        }
+
+        function saveProduct() {
+            if (!checkIsAdminUser()) return;
+            const rawId = document.getElementById('edit-product-id').value;
+            const id = rawId ? Number(rawId) : null;
+            
+            const newTitle = document.getElementById('shop-title-input').value.trim() || 'Article';
+            const newCategory = document.getElementById('shop-category-input').value;
+            const newBadge = document.getElementById('shop-badge-input').value;
+            const newImg = document.getElementById('shop-img-input').value.trim();
+            const newDesc = document.getElementById('shop-desc-input').value.trim() || '';
+            const newPrice = document.getElementById('shop-price-input').value.trim() || 'Gratuit';
+            const newLink = document.getElementById('shop-link-input').value.trim() || '#';
+
+            if (id) {
+                // MODIFICATION EXISTANTE
+                const oldProduct = products.find(prod => Number(prod.id) === id);
+                if (oldProduct) {
+                    let changes = [];
+                    if (oldProduct.title !== newTitle) changes.push(`• Titre : "${oldProduct.title}" ➔ "${newTitle}"`);
+                    if (oldProduct.category !== newCategory) changes.push(`• Catégorie : "${oldProduct.category}" ➔ "${newCategory}"`);
+                    if (oldProduct.badge !== newBadge) changes.push(`• Badge : "${oldProduct.badge || 'Aucun'}" ➔ "${newBadge || 'Aucun'}"`);
+                    if ((oldProduct.price_fr || oldProduct.price || '') !== newPrice) changes.push(`• Prix : "${oldProduct.price_fr || oldProduct.price || 'Gratuit'}" ➔ "${newPrice}"`);
+                    if (oldProduct.link !== newLink) changes.push(`• Lien de téléchargement :\n  - Ancien : ${oldProduct.link || 'Aucun'}\n  - Nouveau : ${newLink || 'Aucun'}`);
+                    
+                    if (oldProduct.img !== newImg) {
+                        changes.push(`• Ancienne Image :\n${oldProduct.img || 'Aucune'}\n• Nouvelle Image :\n${newImg || 'Aucune'}`);
+                    }
+
+                    oldProduct.title = newTitle;
+                    oldProduct.category = newCategory;
+                    oldProduct.badge = newBadge;
+                    oldProduct.img = newImg;
+                    oldProduct.desc_fr = newDesc;
+                    oldProduct.desc_en = newDesc;
+                    oldProduct.price_fr = newPrice;
+                    oldProduct.price_en = newPrice === 'Gratuit' ? 'Free' : newPrice;
+                    oldProduct.link = newLink;
+
+                    const detailsTxt = `A mis à jour l'article ${oldProduct.title} :\n${changes.length > 0 ? changes.join('\n') : 'Aucune modification'}`;
+                    sendClubAdminLog("Action Admin - Article Modifié", detailsTxt);
+                }
+            } else {
+                // CRÉATION NOUVEAU
+                const newProduct = {
+                    id: Date.now(),
+                    title: newTitle,
+                    category: newCategory,
+                    badge: newBadge,
+                    img: newImg,
+                    desc_fr: newDesc,
+                    desc_en: newDesc,
+                    price_fr: newPrice,
+                    price_en: newPrice === 'Gratuit' ? 'Free' : newPrice,
+                    link: newLink
+                };
+                products.push(newProduct);
+
+                const detailsTxt = `A ajouté le nouvel article ${newTitle} :\n• Catégorie : "${newCategory}"\n• Prix : "${newPrice}"\n• Image :\n${newImg || 'Aucune'}\n• Lien de téléchargement :\n${newLink || 'Aucun'}`;
+                sendClubAdminLog("Action Admin - Article Ajouté", detailsTxt);
+            }
+
+            localStorage.setItem('krizix_shop_products', JSON.stringify(products));
+            closeShopModal();
+            renderProducts();
+        }
+
+        function deleteProduct(id) {
+            if (!checkIsAdminUser()) return;
+            const productToDelete = products.find(prod => prod.id === id);
+            products = products.filter(prod => prod.id !== id);
+            localStorage.setItem('krizix_shop_products', JSON.stringify(products));
+
+            const detailsTxt = `A supprimé l'article ${productToDelete ? productToDelete.title : 'Inconnu'} :\n• Catégorie : "${productToDelete ? productToDelete.category : 'N/A'}"\n• Prix : "${productToDelete ? (productToDelete.price_fr || productToDelete.price) : 'N/A'}"\n• Image :\n${productToDelete && productToDelete.img ? productToDelete.img : 'Aucune'}\n• Lien :\n${productToDelete && productToDelete.link ? productToDelete.link : 'Aucun'}`;
+            
+            sendClubAdminLog("Action Admin - Article Supprimé", detailsTxt);
+
+            renderProducts();
+        }
+
+        let currentLang = localStorage.getItem('krizix_lang') || 'fr';
+        function applyLanguage() { 
+            document.querySelectorAll('[data-fr]').forEach(el => { 
+                el.innerHTML = el.getAttribute('data-' + currentLang); 
+            });
+            renderProducts();
+        }
+
+        function toggleLanguage() { 
+            currentLang = currentLang === 'fr' ? 'en' : 'fr'; 
+            localStorage.setItem('krizix_lang', currentLang); 
+            applyLanguage(); 
+        }
+        
+        renderProducts();
+        applyLanguage();
+
+        const io = new IntersectionObserver(entries => { entries.forEach(e => { if(e.isIntersecting) { e.target.classList.add('visible'); } }); }, { threshold: 0.1 });
+        document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+    </script>
+</body>
+</html>
