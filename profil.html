@@ -320,6 +320,7 @@ if (isPremium) {
     else if (customAnim === 'rgb-border') avatarWrap.classList.add('avatar-anim-rgb-border');
 }
 
+// CORRECTION : Gestion propre de la date d'inscription locale
 loadJoinDate(targetUser);
 
 const viewsKey = `krizix_profile_views_${targetUser.id}`;
@@ -518,32 +519,25 @@ function markAllNotificationsAsRead() {
     } catch(e){}
 }
 
-async function loadJoinDate(user){
+// CORRECTION DE LA FONCTION LOADJOINDATE POUR UTILISER LE LOCALSTORAGE DU SITE
+function loadJoinDate(user) {
     const dateEl = document.getElementById('profile-joined-date');
-    
-    // 1. Utilisation prioritaire de la date d'inscription propre au site enregistrée dans auth.js
-    if (user && user.site_joined_at) {
-        dateEl.innerText = `Inscrit le ${user.site_joined_at}`;
-        return;
+    if (!user || !user.id) return;
+
+    const storageKey = `krizix_site_joined_${user.id}`;
+    let joinDate = localStorage.getItem(storageKey);
+
+    if (!joinDate) {
+        // Si l'utilisateur visite son profil pour la première fois sur le site, on enregistre la date actuelle
+        joinDate = new Date().toLocaleDateString('fr-FR', { 
+            day: 'numeric', 
+            month: 'long', 
+            year: 'numeric' 
+        });
+        localStorage.setItem(storageKey, joinDate);
     }
 
-    // 2. Sinon, tentative de récupération via l'API du bot s'il y a un endpoint
-    try {
-        const response = await fetch(`http://fi4.bot-hosting.cloud:25145/api/member-info/${user.id}`);
-        const data = await response.json();
-        if (data.success && data.joinedAt) {
-            dateEl.innerText = `Inscrit le ${data.joinedAt}`;
-            return;
-        }
-    } catch (err) {}
-
-    // 3. Solution de secours locale
-    let firstSeen = localStorage.getItem(`krizix_first_login_${user.id}`);
-    if (!firstSeen) {
-        firstSeen = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
-        localStorage.setItem(`krizix_first_login_${user.id}`, firstSeen);
-    }
-    dateEl.innerText = `Inscrit le ${firstSeen}`;
+    dateEl.innerText = `Inscrit le ${joinDate}`;
 }
 
 function updateAuthNav(user,isAdmin,avatarUrl){const authNavItem=document.getElementById('auth-nav-item');if(!authNavItem)return;
