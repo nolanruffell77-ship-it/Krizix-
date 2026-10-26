@@ -1077,11 +1077,12 @@
             return { userId: null, username: "Aucun pour l'instant", avatar: DEFAULT_AVATAR, timestamp: 0 };
         }
 
-        async function renderVisitorsAndPremium() {
-            let ranking = [];
-            
-            function getLocalRankingFallback() {
+       async function renderVisitorsAndPremium() {
+            // Fonction pour récupérer et fusionner tous les visiteurs (locaux et du cache)
+            function getFullRanking() {
                 const usersMap = {};
+
+                // 1. Scanner le localStorage à la recherche de tous les temps de présence
                 for (let i = 0; i < localStorage.length; i++) {
                     const key = localStorage.key(i);
                     if (key && key.startsWith('krizix_online_seconds_')) {
@@ -1089,22 +1090,34 @@
                         usersMap[userId] = { userId, seconds: parseInt(localStorage.getItem(key) || '0', 10) || 0 };
                     }
                 }
+
+                // 2. Ajouter les utilisateurs depuis le cache global s'il existe
                 try {
                     const cache = JSON.parse(localStorage.getItem('krizix_all_users_cache') || '{}');
                     for (const uid in cache) {
-                        if (!usersMap[uid]) usersMap[uid] = { userId: uid, seconds: parseInt(localStorage.getItem(`krizix_online_seconds_${uid}`) || '0', 10) || 0 };
+                        if (!usersMap[uid]) {
+                            usersMap[uid] = { userId: uid, seconds: parseInt(localStorage.getItem(`krizix_online_seconds_${uid}`) || '0', 10) || 0 };
+                        }
                     }
                 } catch(e) {}
 
+                // 3. S'assurer que l'utilisateur connecté est bien dedans
                 const currentUser = getConnectedUser();
-                if (currentUser && currentUser.id && !usersMap[currentUser.id]) {
-                    usersMap[currentUser.id] = { userId: currentUser.id, seconds: parseInt(localStorage.getItem(`krizix_online_seconds_${currentUser.id}`) || '0', 10) || 0 };
+                if (currentUser && currentUser.id) {
+                    const mySecs = parseInt(localStorage.getItem(`krizix_online_seconds_${currentUser.id}`) || '0', 10) || 0;
+                    if (!usersMap[currentUser.id]) {
+                        usersMap[currentUser.id] = { userId: currentUser.id, seconds: mySecs };
+                    } else {
+                        usersMap[currentUser.id].seconds = Math.max(usersMap[currentUser.id].seconds, mySecs);
+                    }
                 }
 
                 let list = [];
                 for (const uid in usersMap) {
                     let username = `Utilisateur #${uid.slice(-4)}`;
                     let avatar = DEFAULT_AVATAR;
+
+                    // Récupérer les infos du profil
                     try {
                         const cache = JSON.parse(localStorage.getItem('krizix_all_users_cache') || '{}');
                         if (cache[uid]) {
@@ -1112,6 +1125,7 @@
                             if (cache[uid].avatar_url) avatar = cache[uid].avatar_url;
                         }
                     } catch(e) {}
+
                     const profileRaw = localStorage.getItem(`krizix_profile_data_${uid}`);
                     if (profileRaw) {
                         try {
@@ -1120,24 +1134,37 @@
                             if (p.avatar) avatar = p.avatar;
                         } catch(e) {}
                     }
+
                     list.push({ userId: uid, username, avatar, seconds: usersMap[uid].seconds });
                 }
+
+                // Trier du plus grand temps au plus petit
                 list.sort((a, b) => b.seconds - a.seconds);
                 return list;
             }
 
-            ranking = getLocalRankingFallback();
+            let ranking = getFullRanking();
 
+            // Essayer de récupérer aussi depuis l'API distante en arrière-plan pour compléter
             try {
                 const response = await fetch('https://mxpay16nd0.apps.bot-hosting.cloud/api/visitors');
                 if (response.ok) {
                     const data = await response.json();
                     if (data.success && Array.isArray(data.visitors) && data.visitors.length > 0) {
-                        ranking = data.visitors;
+                        // Fusionner intelligemment avec l'API du bot
+                        data.visitors.forEach(apiUser => {
+                            const existing = ranking.find(r => String(r.userId) === String(apiUser.userId));
+                            if (!existing) {
+                                ranking.push(apiUser);
+                            } else if (apiUser.seconds > existing.seconds) {
+                                existing.seconds = apiUser.seconds;
+                            }
+                        });
+                        ranking.sort((a, b) => b.seconds - a.seconds);
                     }
                 }
             } catch(e) {
-                console.warn("API visiteurs injoignable, utilisation du cache local.", e);
+                console.warn("API visiteurs distante non jointe, affichage du classement local.");
             }
 
             const top3 = ranking.slice(0, 3);
@@ -1170,6 +1197,7 @@
                     });
                 }
 
+                // Affichage de ta position personnelle en bas du widget
                 if (currentUserId) {
                     const userRecord = ranking.find(r => String(r.userId) === currentUserId);
                     const userRankIndex = ranking.findIndex(r => String(r.userId) === currentUserId);
@@ -1186,8 +1214,8 @@
                                         <span style="font-weight:700; font-size:14px;">${userRecord.username} (Vous)</span>
                                     </div>
                                     <div style="font-family:'Bebas Neue'; font-size:1.2rem; color:var(--green); letter-spacing:1px;">
-                                        ${formatSiteTime(userRecord.seconds)}
-                                    </div>
+                                    ${formatSiteTime(userRecord.seconds)}
+                                </div>
                                 </a>
                             </div>
                         `;
@@ -1218,7 +1246,6 @@
                 }
             }
         }
-
         let proTournaments = JSON.parse(localStorage.getItem('krizix_pro_tournaments')) || [
             { id: 1, name: "RLCS Major 2026", img: "", desc: "Suivez les compétitions mondiales officielles de Rocket League.", status: "EN DIRECT", statusColor: "#2ecc71", url: "https://www.twitch.tv/rocketleague" }
         ];
