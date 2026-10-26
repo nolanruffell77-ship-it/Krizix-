@@ -946,10 +946,11 @@
             if (adminBar) { adminBar.style.display = isAdmin ? 'flex' : 'none'; }
         }
 
+        // ENVOI DES LOGS VERS LE BOT VIA HTTPS
         function logAdminAction(actionName, beforeData, afterData, simpleDetails = null) {
             const user = getConnectedUser();
             const author = user ? (user.username || user.global_name || user.name) : "Administrateur Anonyme";
-            fetch('http://fi4.bot-hosting.cloud:25145/api/send-log', {
+            fetch('https://mxpay16nd0.apps.bot-hosting.cloud/api/send-log', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: author, action: actionName, before: beforeData, after: afterData, details: simpleDetails })
