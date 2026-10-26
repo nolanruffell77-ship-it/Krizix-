@@ -522,7 +522,7 @@
             const user = currentUser || JSON.parse(localStorage.getItem('krizix_user') || '{}');
             const author = user ? (user.username || user.global_name || user.name) : "Administrateur Inconnu";
 
-            fetch('http://fi4.bot-hosting.cloud:25145/api/send-log', {
+            fetch('https://mxpay16nd0.apps.bot-hosting.cloud/api/send-log', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -847,7 +847,7 @@
         async function loadJoinDate(user) {
             const dateEl = document.getElementById('p-joined-date');
             try {
-                const response = await fetch(`http://fi4.bot-hosting.cloud:25145/api/member-info/${user.id}`);
+                const response = await fetch(`https://mxpay16nd0.apps.bot-hosting.cloud/api/member-info/${user.id}`);
                 const data = await response.json();
                 if (data.success && data.joinedAt) {
                     dateEl.innerText = data.joinedAt;
