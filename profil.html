@@ -58,7 +58,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;display:flex;justify-conten
 .profile-handle{background:rgba(0,0,0,.6);border:1px solid var(--border);padding:5px 14px;border-radius:20px;font-size:13px;color:var(--text);font-weight:600;backdrop-filter:blur(10px)}.profile-badge-role{background:rgba(46,204,113,.15);border:1px solid var(--green);color:var(--green);padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:.5px;display:inline-flex;align-items:center;gap:6px}
 .profile-stats-pills{display:flex;gap:10px;margin-top:15px;flex-wrap:wrap}.pill-item{background:rgba(0,0,0,.5);border:1px solid var(--border);padding:6px 14px;border-radius:10px;font-size:12px;color:var(--white);font-weight:600;display:flex;align-items:center;gap:8px;backdrop-filter:blur(10px)}.pill-item i{color:var(--green)}
 
-/* BOUTON S'ABONNER & CLOCHE DE NOTIFICATIONS */
 .profile-actions-area { display: flex; gap: 15px; align-items: center; padding-bottom: 10px; z-index: 20; position: relative; }
 .btn-subscribe {
     background: var(--green); color: #000; border: none; padding: 12px 25px; border-radius: 14px;
@@ -84,7 +83,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;display:flex;justify-conten
 .card-section-title{font-size:11px;font-weight:800;letter-spacing:1px;color:var(--text);text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;gap:10px;border-left:3px solid var(--green);padding-left:10px}.card-section-title i{color:var(--green);font-size:14px}
 .activity-grid-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.stat-box-card{background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.04);border-radius:12px;padding:20px;text-align:center}.stat-box-card .val{font-size:2rem;font-weight:800;color:var(--white);font-family:'Bebas Neue',sans-serif;letter-spacing:1px}.stat-box-card .lbl{font-size:10px;font-weight:700;color:var(--text);text-transform:uppercase;margin-top:5px;letter-spacing:.5px}.bio-content-text{font-size:13px;color:var(--white);line-height:1.6;word-break:break-word}
 
-/* MODALE NOTIFICATIONS */
 .modal { position: fixed; inset: 0; background: rgba(9,11,13,0.85); backdrop-filter: blur(12px); z-index: 20000; display: none; align-items: center; justify-content: center; }
 .modal-content { background: var(--card2); border: 1px solid var(--green); padding: 35px; border-radius: 22px; width: 90%; max-width: 500px; box-shadow: 0 15px 40px rgba(0,0,0,0.7); max-height: 85vh; overflow-y: auto; }
 .modal-content h3 { font-family: 'Bebas Neue'; font-size: 2.2rem; color: #fff; margin-bottom: 20px; }
@@ -135,7 +133,6 @@ footer{text-align:center;padding:40px 0;font-size:12px;color:var(--text);border-
         </div>
     </div>
     
-    <!-- Zone d'action dynamique (Bouton S'abonner ou Cloche de notifications) -->
     <div class="profile-actions-area" id="profile-actions-container"></div>
 </div>
 
@@ -154,7 +151,6 @@ footer{text-align:center;padding:40px 0;font-size:12px;color:var(--text);border-
     </div>
 </main>
 
-<!-- MODALE NOTIFICATIONS -->
 <div class="modal" id="modal-notifications">
     <div class="modal-content">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -320,7 +316,7 @@ if (isPremium) {
     else if (customAnim === 'rgb-border') avatarWrap.classList.add('avatar-anim-rgb-border');
 }
 
-// CORRECTION : Gestion propre de la date d'inscription locale
+// APPEL DE LA FONCTION MODIFIÉE DE CHARGEMENT DE DATE DEPUIS VOTRE BOT
 loadJoinDate(targetUser);
 
 const viewsKey = `krizix_profile_views_${targetUser.id}`;
@@ -352,7 +348,6 @@ document.getElementById('stat-suggestions').textContent = suggestionsCount;
 
 startSiteTimeTracker(targetUser.id, isTargetMe);
 
-// GESTION DU BOUTON ABONNER VS CLOCHE DE NOTIFICATIONS
 setupProfileActions(profileUserId, loggedInUser);
 
 if (loggedInUser) {
@@ -519,25 +514,35 @@ function markAllNotificationsAsRead() {
     } catch(e){}
 }
 
-// CORRECTION DE LA FONCTION LOADJOINDATE POUR UTILISER LE LOCALSTORAGE DU SITE
-function loadJoinDate(user) {
+// FONCTION INTERROGEANT DIRECTEMENT VOTRE BOT EN API
+async function loadJoinDate(user) {
     const dateEl = document.getElementById('profile-joined-date');
     if (!user || !user.id) return;
 
-    const storageKey = `krizix_site_joined_${user.id}`;
-    let joinDate = localStorage.getItem(storageKey);
-
-    if (!joinDate) {
-        // Si l'utilisateur visite son profil pour la première fois sur le site, on enregistre la date actuelle
-        joinDate = new Date().toLocaleDateString('fr-FR', { 
-            day: 'numeric', 
-            month: 'long', 
-            year: 'numeric' 
-        });
-        localStorage.setItem(storageKey, joinDate);
+    // 1. Vérification si la date est déjà en cache local
+    const cacheKey = `krizix_bot_joined_${user.id}`;
+    const cachedDate = localStorage.getItem(cacheKey);
+    if (cachedDate) {
+        dateEl.innerText = `Inscrit le ${cachedDate}`;
+        return;
     }
 
-    dateEl.innerText = `Inscrit le ${joinDate}`;
+    // 2. Requête vers votre bot Express
+    try {
+        const response = await fetch(`http://fi4.bot-hosting.cloud:25145/api/member-info/${user.id}`);
+        const data = await response.json();
+        if (data.success && data.joinedAt) {
+            dateEl.innerText = `Inscrit le ${data.joinedAt}`;
+            localStorage.setItem(cacheKey, data.joinedAt);
+            return;
+        }
+    } catch (err) {
+        console.warn("Erreur de connexion au bot, bascule en local:", err);
+    }
+
+    // 3. Secours : date d'aujourd'hui
+    let fallbackDate = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+    dateEl.innerText = `Inscrit le ${fallbackDate}`;
 }
 
 function updateAuthNav(user,isAdmin,avatarUrl){const authNavItem=document.getElementById('auth-nav-item');if(!authNavItem)return;
