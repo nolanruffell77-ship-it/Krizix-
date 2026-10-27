@@ -7,7 +7,47 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#090b0d;--card:rgba(17,20,23,.82);--card2:#161a1e;--text:#9aa1aa;--white:#fff;--green:#2ecc71;--glow:rgba(46,204,113,.35);--border:rgba(255,255,255,.09)}*{box-sizing:border-box;margin:0;padding:0}body{background:var(--bg);color:var(--text);font-family:Poppins,sans-serif;min-height:100vh}nav{height:75px;position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:0 6%;background:#090b0ded;border-bottom:1px solid var(--border);backdrop-filter:blur(16px)}.logo{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;font:26px 'Bebas Neue'}.logo img{height:48px}.links{display:flex;gap:20px;list-style:none;flex-wrap:wrap}.links a{color:var(--text);text-decoration:none;font-size:12px;font-weight:700;text-transform:uppercase}.links a:hover{color:var(--green)}.banner{height:270px;background:linear-gradient(180deg,#090b0d20,var(--bg)),url('https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1600') center/cover;border-bottom:2px solid var(--green);box-shadow:0 12px 35px var(--glow)}.hero{max-width:1200px;margin:-58px auto 0;padding:0 28px;position:relative;display:flex;align-items:flex-end;gap:24px;flex-wrap:wrap}.avatar-wrap{width:138px;height:138px;padding:4px;background:var(--bg);border:2px solid var(--green);border-radius:20px;box-shadow:0 0 30px var(--glow);flex-shrink:0}.avatar-wrap img{width:100%;height:100%;object-fit:cover;border-radius:15px}.identity{padding-bottom:5px;min-width:220px;flex:1}.identity h1{font:clamp(2rem,5vw,3.5rem)/1 'Bebas Neue';color:#fff;letter-spacing:1.5px;overflow-wrap:anywhere}.meta,.pills{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}.chip,.pill{padding:6px 12px;border-radius:18px;background:#0008;border:1px solid var(--border);font-size:12px;font-weight:600}.role{color:var(--green);border-color:var(--green);background:#2ecc7120}.pill{border-radius:9px;color:#fff}.pill i{color:var(--green);margin-right:6px}.content{max-width:1200px;margin:32px auto;padding:0 28px;display:grid;grid-template-columns:2fr 1fr;gap:22px}.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;backdrop-filter:blur(12px)}.heading{font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;border-left:3px solid var(--green);padding-left:10px;margin-bottom:20px;color:#b9c0c8}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.stat{background:#0005;border:1px solid var(--border);border-radius:12px;padding:18px 8px;text-align:center}.value{font:2rem 'Bebas Neue';color:#fff}.label{font-size:10px;text-transform:uppercase;font-weight:700}.bio{font-size:13px;color:#fff;line-height:1.7;overflow-wrap:anywhere}.actions{display:flex;gap:10px;align-items:center;padding-bottom:8px}.btn{border:0;border-radius:12px;background:var(--green);color:#061109;font-weight:800;padding:12px 17px;cursor:pointer}.btn.secondary{background:#ffffff12;color:#fff;border:1px solid var(--border)}.error{color:#ff7675}.footer{text-align:center;padding:35px;border-top:1px solid var(--border);font-size:12px;margin-top:40px}@media(max-width:800px){nav{height:auto;min-height:75px;align-items:flex-start;gap:12px;flex-direction:column;padding:12px 5%}.links{gap:12px}.banner{height:220px}.content{grid-template-columns:1fr}.stats{grid-template-columns:1fr}.hero,.content{padding-left:18px;padding-right:18px}.actions{width:100%}}
+:root{--bg:#090b0d;--card:rgba(17,20,23,.82);--card2:#161a1e;--text:#9aa1aa;--white:#fff;--green:#2ecc71;--glow:rgba(46,204,113,.35);--border:rgba(255,255,255,.09)}*{box-sizing:border-box;margin:0;padding:0}body{background:var(--bg);color:var(--text);font-family:Poppins,sans-serif;min-height:100vh}
+nav{height:75px;position:sticky;top:0;z-index:1000;display:flex;align-items:center;justify-content:space-between;padding:0 6%;background:#090b0ded;border-bottom:1px solid var(--border);backdrop-filter:blur(16px)}
+.logo{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;font:26px 'Bebas Neue'}
+.logo img{height:48px}
+.links{display:flex;gap:20px;list-style:none;align-items:center;flex-wrap:wrap}
+.links a{color:var(--text);text-decoration:none;font-size:12px;font-weight:700;text-transform:uppercase;transition:color 0.25s}
+.links a:hover{color:var(--green)}
+
+/* Style du menu déroulant profil (pastille en haut à droite) */
+.user-menu-container { position: relative; display: flex; align-items: center; }
+.user-badge-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); padding: 6px 14px; border-radius: 30px; display: flex; align-items: center; gap: 10px; cursor: pointer; color: #fff; font-size: 13px; font-weight: 600; transition: border-color 0.3s; }
+.user-badge-btn:hover { border-color: var(--green); }
+.user-badge-btn img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+.user-dropdown-content { display: none; position: absolute; right: 0; top: 120%; background: var(--card2); min-width: 180px; border-radius: 12px; padding: 8px 0; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 2000; }
+.user-dropdown-content a { display: flex !important; align-items: center; gap: 10px; padding: 10px 18px; font-size: 12px; color: var(--text) !important; text-transform: none; text-decoration: none; }
+.user-dropdown-content a:hover { color: var(--green) !important; background: rgba(255,255,255,0.03); }
+
+.banner{height:270px;background:linear-gradient(180deg,#090b0d20,var(--bg)),url('https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1600') center/cover;border-bottom:2px solid var(--green);box-shadow:0 12px 35px var(--glow)}
+.hero{max-width:1200px;margin:-58px auto 0;padding:0 28px;position:relative;display:flex;align-items:flex-end;gap:24px;flex-wrap:wrap}
+.avatar-wrap{width:138px;height:138px;padding:4px;background:var(--bg);border:2px solid var(--green);border-radius:20px;box-shadow:0 0 30px var(--glow);flex-shrink:0}
+.avatar-wrap img{width:100%;height:100%;object-fit:cover;border-radius:15px}
+.identity{padding-bottom:5px;min-width:220px;flex:1}
+.identity h1{font:clamp(2rem,5vw,3.5rem)/1 'Bebas Neue';color:#fff;letter-spacing:1.5px;overflow-wrap:anywhere}
+.meta,.pills{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.chip,.pill{padding:6px 12px;border-radius:18px;background:#0008;border:1px solid var(--border);font-size:12px;font-weight:600}
+.role{color:var(--green);border-color:var(--green);background:#2ecc7120}
+.pill{border-radius:9px;color:#fff}
+.pill i{color:var(--green);margin-right:6px}
+.content{max-width:1200px;margin:32px auto;padding:0 28px;display:grid;grid-template-columns:2fr 1fr;gap:22px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;backdrop-filter:blur(12px)}
+.heading{font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;border-left:3px solid var(--green);padding-left:10px;margin-bottom:20px;color:#b9c0c8}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.stat{background:#0005;border:1px solid var(--border);border-radius:12px;padding:18px 8px;text-align:center}
+.value{font:2rem 'Bebas Neue';color:#fff}
+.label{font-size:10px;text-transform:uppercase;font-weight:700}
+.bio{font-size:13px;color:#fff;line-height:1.7;overflow-wrap:anywhere}
+.actions{display:flex;gap:10px;align-items:center;padding-bottom:8px}
+.btn{border:0;border-radius:12px;background:var(--green);color:#061109;font-weight:800;padding:12px 17px;cursor:pointer}
+.btn.secondary{background:#ffffff12;color:#fff;border:1px solid var(--border)}
+.footer{text-align:center;padding:35px;border-top:1px solid var(--border);font-size:12px;margin-top:40px}
+@media(max-width:800px){nav{height:auto;min-height:75px;align-items:flex-start;gap:12px;flex-direction:column;padding:12px 5%}.links{gap:12px}.banner{height:220px}.content{grid-template-columns:1fr}.stats{grid-template-columns:1fr}.hero,.content{padding-left:18px;padding-right:18px}.actions{width:100%}}
 </style>
 </head>
 <body>
@@ -21,8 +61,10 @@
     <li><a href="club.html">Le Club</a></li>
     <li><a href="roster-rl.html">Rosters</a></li>
     <li><a href="boutique.html">Boutique</a></li>
+    <li id="auth-nav-item"></li>
   </ul>
 </nav>
+
 <div class="banner" id="banner"></div>
 <section class="hero">
   <div class="avatar-wrap" id="avatar-wrap">
@@ -36,7 +78,7 @@
     </div>
     <div class="pills">
       <span class="pill"><i class="fa-regular fa-calendar"></i><span id="joined">Inscrit sur Discord : chargement…</span></span>
-      <span class="pill"><i class="fa-solid fa-user-group"></i><span id="followers-count">0 abonné(s)</span></span>
+      <span class="pill"><i class="fa-solid fa-user-group"></i><span id="followers-count">0 Abonné(s)</span></span>
       <span class="pill"><i class="fa-solid fa-bolt"></i><span>En ligne</span></span>
       <span class="pill"><i class="fa-regular fa-eye"></i><span id="views">0 Vues</span></span>
     </div>
@@ -67,7 +109,7 @@
   </section>
   <section class="card">
     <div class="heading"><i class="fa-regular fa-user"></i> À propos</div>
-    <p class="bio" id="bio">Aucune description renseignée.</p>
+    <p class="bio" id="bio">Aucune description renseignée. Vous pouvez modifier votre "À propos" directement depuis vos paramètres.</p>
     <div class="heading" style="margin-top:25px">Titres</div>
     <div id="titles" class="bio">Chargement des titres…</div>
   </section>
@@ -106,7 +148,45 @@ async function saveOnlineSetting(key, value){
     }catch(e){console.warn(e); return false;}
 }
 
+// Mise à jour de la navbar pour afficher la pastille utilisateur avec Profil et Paramètres
+function renderAuthNav() {
+    const authNav = document.getElementById('auth-nav-item');
+    if (!authNav) return;
+    const user = readJSON('krizix_user', null);
+    if (!user) {
+        authNav.innerHTML = `<button type="button" class="btn-discord" onclick="loginWithDiscord()" style="background:transparent; color:#fff; border:1.5px solid rgba(255,255,255,0.15); padding:8px 18px; border-radius:50px; text-transform:uppercase; font-weight:700; font-size:12px; cursor:pointer;"><i class="fa-brands fa-discord"></i> Connexion</button>`;
+        return;
+    }
+    const avatar = user.avatar_url || (user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : FALLBACK);
+    const username = user.username || user.global_name || 'Compte';
+    
+    authNav.innerHTML = `
+        <div class="user-menu-container" id="user-menu-toggle">
+            <div class="user-badge-btn">
+                <img src="${avatar}" onerror="this.src='${FALLBACK}'">
+                <span>${username}</span>
+                <i class="fa-solid fa-chevron-down" style="font-size:10px;"></i>
+            </div>
+            <div class="user-dropdown-content" id="user-dropdown-menu">
+                <a href="profil.html?id=${user.id}"><i class="fa-solid fa-user"></i> Profil</a>
+                <a href="parametres.html"><i class="fa-solid fa-gear"></i> Paramètres</a>
+            </div>
+        </div>
+    `;
+    
+    const toggle = document.getElementById('user-menu-toggle');
+    const menu = document.getElementById('user-dropdown-menu');
+    toggle.onclick = (e) => {
+        e.stopPropagation();
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    };
+    document.addEventListener('click', () => {
+        if(menu) menu.style.display = 'none';
+    });
+}
+
 async function init(){
+    renderAuthNav();
     const params=new URLSearchParams(location.search);
     const id=params.get('id');
     const me=readJSON('krizix_user',null);
@@ -175,7 +255,6 @@ async function init(){
     safeText('tournaments','0');
     safeText('suggestions','0');
 
-    // Temps passé sur le site (depuis le cache global ou localStorage)
     let siteSeconds = 0;
     try {
         const timeKey = `krizix_online_seconds_${targetId}`;
@@ -186,7 +265,6 @@ async function init(){
     const mins = totalMins % 60;
     safeText('time', `${hours} H ${mins} MIN`);
     
-    // Abonnés et Notifications en ligne
     const subsMap = await fetchOnlineSetting('subscriptions', {});
     const notifsMap = await fetchOnlineSetting('notifications', {});
     
@@ -205,7 +283,6 @@ async function init(){
         notifListEl.textContent = 'Aucune notification récente.';
     }
 
-    // Gestion du clic sur la cloche
     const bellBtn = document.getElementById('bell-btn');
     const notifDropdown = document.getElementById('notifications-dropdown');
     bellBtn.onclick = (e) => {
@@ -213,7 +290,7 @@ async function init(){
         notifDropdown.style.display = notifDropdown.style.display === 'block' ? 'none' : 'block';
     };
     document.addEventListener('click', () => {
-        notifDropdown.style.display = 'none';
+        if(notifDropdown) notifDropdown.style.display = 'none';
     });
 
     const actionsContainer = document.getElementById('actions');
