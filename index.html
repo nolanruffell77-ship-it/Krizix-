@@ -1078,7 +1078,7 @@
             return { userId: null, username: "Aucun pour l'instant", avatar: DEFAULT_AVATAR, timestamp: 0 };
         }
 
-        // CHARGEMENT DU CLASSEMENT DEPUIS LE SERVEUR CENTRAL (AVEC SECOURS LOCAL)
+        // CHARGEMENT DU CLASSEMENT DEPUIS LE SERVEUR CENTRAL
         async function renderVisitorsAndPremium() {
             let ranking = [];
 
@@ -1091,36 +1091,7 @@
                     }
                 }
             } catch(e) {
-                console.warn("API serveur central injoignable, basculement temporaire sur le cache local.", e);
-            }
-
-            // Si le serveur ne renvoie rien, on utilise le stockage local en secours
-            if (ranking.length === 0) {
-                const usersMap = {};
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key && key.startsWith('krizix_online_seconds_')) {
-                        const userId = key.replace('krizix_online_seconds_', '');
-                        usersMap[userId] = { userId, seconds: parseInt(localStorage.getItem(key) || '0', 10) || 0 };
-                    }
-                }
-                const currentUser = getConnectedUser();
-                if (currentUser && currentUser.id && !usersMap[currentUser.id]) {
-                    usersMap[currentUser.id] = { userId: currentUser.id, seconds: parseInt(localStorage.getItem(`krizix_online_seconds_${currentUser.id}`) || '0', 10) || 0 };
-                }
-                for (const uid in usersMap) {
-                    let username = `Utilisateur #${uid.slice(-4)}`;
-                    let avatar = DEFAULT_AVATAR;
-                    try {
-                        const cache = JSON.parse(localStorage.getItem('krizix_all_users_cache') || '{}');
-                        if (cache[uid]) {
-                            if (cache[uid].username) username = cache[uid].username;
-                            if (cache[uid].avatar_url) avatar = cache[uid].avatar_url;
-                        }
-                    } catch(e) {}
-                    ranking.push({ userId: uid, username, avatar, seconds: usersMap[uid].seconds });
-                }
-                ranking.sort((a, b) => b.seconds - a.seconds);
+                console.warn("API serveur central injoignable.", e);
             }
 
             const top3 = ranking.slice(0, 3);
@@ -1269,19 +1240,15 @@
 
             if (id) {
                 const pt = proTournaments.find(item => item.id == id);
-                let oldName = pt ? pt.name : id;
-                let oldStatus = pt ? pt.status : '';
-                let oldDesc = pt ? pt.desc : '';
-                let oldImg = pt ? (pt.img || 'Aucune') : 'Aucune';
                 if (pt) {
                     pt.name = name; pt.img = img; pt.desc = desc; pt.status = status; pt.statusColor = statusColor; pt.url = url;
                     localStorage.setItem('krizix_pro_tournaments', JSON.stringify(proTournaments));
-                    logAdminAction("Tournoi Pro Modifié", "", "", `A mis à jour le tournoi pro "${oldName}" :\n• Nom : "${oldName}" ➔ "${name}"\n• Statut : "${oldStatus}" ➔ "${status}"\n• Description : "${oldDesc}" ➔ "${desc}"\n• Bannière : "${oldImg}" ➔ "${img || 'Aucune'}"`);
+                    logAdminAction("Tournoi Pro Modifié", "", "", `A mis à jour le tournoi pro "${name}"`);
                 }
             } else {
                 proTournaments.push({ id: Date.now(), name, img, desc, status, statusColor, url });
                 localStorage.setItem('krizix_pro_tournaments', JSON.stringify(proTournaments));
-                logAdminAction("Tournoi Pro Ajouté", "", "", `A ajouté un nouveau tournoi pro :\n• Nom : "${name}"\n• Statut : "${status}"\n• Description : "${desc}"\n• Bannière : "${img || 'Aucune'}"`);
+                logAdminAction("Tournoi Pro Ajouté", "", "", `A ajouté le tournoi pro "${name}"`);
             }
             closeProTourneyModal();
             renderProTournaments();
@@ -1295,7 +1262,30 @@
             renderProTournaments();
         }
 
-        let newsList = JSON.parse(localStorage.getItem('krizix_home_news')) || [];
+        // --- SYNCHRONISATION ACTUALITÉS VIA API ---
+        let newsList = [];
+
+        async function fetchNews() {
+            try {
+                const res = await fetch('https://mxpay16nd0.apps.bot-hosting.cloud/api/news');
+                const data = await res.json();
+                if (data.success) {
+                    newsList = data.news || [];
+                    renderNews();
+                }
+            } catch(e) { console.error("Erreur chargement news", e); }
+        }
+
+        async function syncNewsToServer() {
+            try {
+                await fetch('https://mxpay16nd0.apps.bot-hosting.cloud/api/news', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ news: newsList })
+                });
+            } catch(e) { console.error("Erreur synchro news", e); }
+        }
+
         function renderNews() {
             const container = document.getElementById('news-container');
             const isAdmin = checkIsAdmin();
@@ -1350,18 +1340,15 @@
             if(!title) return;
             if (id) {
                 const n = newsList.find(item => item.id == id);
-                let oldTitle = n ? n.title : id;
-                let oldDesc = n ? n.desc : '';
-                let oldImg = n ? (n.img || 'Aucune') : 'Aucune';
                 if (n) { 
                     n.title = title; n.date = date; n.img = img; n.desc = desc; 
-                    logAdminAction("Actualité Modifiée", "", "", `A mis à jour l'actualité "${oldTitle}" :\n• Titre : "${oldTitle}" ➔ "${title}"\n• Description : "${oldDesc}" ➔ "${desc}"\n• Image : "${oldImg}" ➔ "${img || 'Aucune'}"`);
+                    logAdminAction("Actualité Modifiée", "", "", `A mis à jour l'actualité "${title}"`);
                 }
             } else {
                 newsList.unshift({ id: Date.now(), title, date, img, desc });
-                logAdminAction("Actualité Publiée", "", "", `A publié une nouvelle actualité :\n• Titre : "${title}"\n• Date : "${date}"\n• Image : "${img || 'Aucune'}"`);
+                logAdminAction("Actualité Publiée", "", "", `A publié l'actualité "${title}"`);
             }
-            localStorage.setItem('krizix_home_news', JSON.stringify(newsList));
+            syncNewsToServer();
             closeNewsModal();
             renderNews();
         }
@@ -1369,16 +1356,39 @@
         function deleteNews(id) {
             const n = newsList.find(item => item.id === id);
             newsList = newsList.filter(item => item.id !== id);
-            localStorage.setItem('krizix_home_news', JSON.stringify(newsList));
+            syncNewsToServer();
             logAdminAction("Actualité Supprimée", "", "", `A supprimé l'actualité "${n ? n.title : id}"`);
             renderNews();
         }
 
-        let tournaments = JSON.parse(localStorage.getItem('krizix_tournaments')) || [];
+        // --- SYNCHRONISATION TOURNOIS VIA API ---
+        let tournaments = [];
+
+        async function fetchTournaments() {
+            try {
+                const res = await fetch('https://mxpay16nd0.apps.bot-hosting.cloud/api/tournaments');
+                const data = await res.json();
+                if (data.success) {
+                    tournaments = data.tournaments || [];
+                    renderTournaments();
+                }
+            } catch(e) { console.error("Erreur chargement tournois", e); }
+        }
+
+        async function syncTournamentsToServer() {
+            try {
+                await fetch('https://mxpay16nd0.apps.bot-hosting.cloud/api/tournaments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tournaments })
+                });
+            } catch(e) { console.error("Erreur synchro tournois", e); }
+        }
 
         function renderTournaments() {
             const container = document.getElementById('tournaments-container');
             const isAdmin = checkIsAdmin();
+            if (!container) return;
             if (!tournaments.length) {
                 container.innerHTML = `<div class="tournament-card" style="text-align:center; padding: 45px;"><p style="color:#7f8691; font-style:italic;">Aucun tournoi actif.</p></div>`;
                 return;
@@ -1711,35 +1721,11 @@
             if (!tourney.matchScores) tourney.matchScores = {};
             const oldScore = tourney.matchScores[`${matchId}_${teamNum}`] || '-';
             tourney.matchScores[`${matchId}_${teamNum}`] = rawVal === '' ? '-' : rawVal;
-            localStorage.setItem('krizix_tournaments', JSON.stringify(tournaments));
+            
+            syncTournamentsToServer();
             
             let teamName = `Équipe ${teamNum}`;
-            let participants = tourney.participants || [];
-            let bracketSize = 2;
-            while (bracketSize < participants.length) bracketSize *= 2;
-            let halfSize = bracketSize / 2;
-            let leftParticipants = [], rightParticipants = [];
-            participants.forEach((p, idx) => { if (idx % 2 === 0) leftParticipants.push(p); else rightParticipants.push(p); });
-
-            if (matchId.startsWith('L_')) {
-                let parts = matchId.split('_');
-                let r = parseInt(parts[1].replace('r', ''));
-                let mIdx = parseInt(parts[2].replace('m', ''));
-                if (r === 0) {
-                    let pObj = leftParticipants[mIdx * 2 + (teamNum == 1 ? 0 : 1)];
-                    if (pObj) teamName = pObj.teamName || pObj.discordName || pObj.name;
-                }
-            } else if (matchId.startsWith('R_')) {
-                let parts = matchId.split('_');
-                let r = parseInt(parts[1].replace('r', ''));
-                let mIdx = parseInt(parts[2].replace('m', ''));
-                if (r === 0) {
-                    let pObj = rightParticipants[mIdx * 2 + (teamNum == 1 ? 0 : 1)];
-                    if (pObj) teamName = pObj.teamName || pObj.discordName || pObj.name;
-                }
-            }
-
-            logAdminAction("Score de Tournoi Modifié", "", "", `A mis à jour le score du tournoi "${tourney.name}" :\n• Équipe : "${teamName}"\n• Match : ${matchId}\n• Score : ${oldScore} ➔ ${rawVal || '0'}`);
+            logAdminAction("Score de Tournoi Modifié", "", "", `A mis à jour le score du tournoi "${tourney.name}"`);
             
             closeQuickScoreModal();
             openBracketModal(tourneyId);
@@ -1772,7 +1758,7 @@
             });
 
             if (alreadyInTourney) {
-                alert("Vous êtes déjà inscrit à ce tournoi (en tant que capitaine ou coéquipier) ! Impossible de vous réinscrire.");
+                alert("Vous êtes déjà inscrit à ce tournoi !");
                 return;
             }
 
@@ -1950,7 +1936,8 @@
                 teammates: teammatesList,
                 avatar: userAvatar
             });
-            localStorage.setItem('krizix_tournaments', JSON.stringify(tournaments));
+            
+            syncTournamentsToServer();
             logAdminAction("Inscription Tournoi", "", "", `L'équipe "${teamName}" s'est inscrite au tournoi "${tourney.name}".`);
             closeRegisterModal();
             renderTournaments();
@@ -2006,16 +1993,15 @@
 
             if (id) {
                 const t = tournaments.find(item => item.id == id);
-                let oldName = t ? t.name : id;
                 if (t) { 
                     t.name = name; t.game = game; t.rewardTitle = rewardTitle; t.date = date; t.desc = desc; 
-                    logAdminAction("Modification Tournoi", "", "", `Le tournoi "${oldName}" a été modifié.`);
+                    logAdminAction("Modification Tournoi", "", "", `Le tournoi "${name}" a été modifié.`);
                 }
             } else {
                 tournaments.push({ id: Date.now(), name, game, rewardTitle, date, desc, participants: [] });
-                logAdminAction("Création Tournoi", "", "", `Création d'un nouveau tournoi communautaire : "${name}".`);
+                logAdminAction("Création Tournoi", "", "", `Création du tournoi : "${name}".`);
             }
-            localStorage.setItem('krizix_tournaments', JSON.stringify(tournaments));
+            syncTournamentsToServer();
             closeTourneyModal();
             renderTournaments();
         }
@@ -2023,8 +2009,8 @@
         function deleteTournament(id) {
             const t = tournaments.find(item => item.id === id);
             tournaments = tournaments.filter(item => item.id !== id);
-            localStorage.setItem('krizix_tournaments', JSON.stringify(tournaments));
-            logAdminAction("Suppression Tournoi", "", "", `Le tournoi communautaire "${t ? t.name : id}" a été supprimé.`);
+            syncTournamentsToServer();
+            logAdminAction("Suppression Tournoi", "", "", `Le tournoi "${t ? t.name : id}" a été supprimé.`);
             renderTournaments();
         }
 
@@ -2103,12 +2089,35 @@
         function saveStats() {
             const stats = { titres: document.getElementById('input-titres').value || '0', jeux: document.getElementById('input-jeux').value || '0' };
             localStorage.setItem('krizix_home_stats', JSON.stringify(stats));
-            logAdminAction("Mise à jour Statistiques", "", "", `Mise à jour des statistiques globales du site.`);
+            logAdminAction("Mise à jour Statistiques", "", "", `Mise à jour des statistiques globales.`);
             closeStatsModal();
             loadStats();
         }
 
-        let matches = JSON.parse(localStorage.getItem('krizix_home_matches')) || [];
+        // --- SYNCHRONISATION MATCHS VIA API ---
+        let matches = [];
+
+        async function fetchMatches() {
+            try {
+                const res = await fetch('https://mxpay16nd0.apps.bot-hosting.cloud/api/matches');
+                const data = await res.json();
+                if (data.success) {
+                    matches = data.matches || [];
+                    renderMatches();
+                }
+            } catch(e) { console.error("Erreur chargement matchs", e); }
+        }
+
+        async function syncMatchesToServer() {
+            try {
+                await fetch('https://mxpay16nd0.apps.bot-hosting.cloud/api/matches', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ matches })
+                });
+            } catch(e) { console.error("Erreur synchro matchs", e); }
+        }
+
         function renderMatches() {
             const resContainer = document.getElementById('list-resultats');
             const proxContainer = document.getElementById('list-prochains');
@@ -2145,16 +2154,16 @@
                 logo: document.getElementById('match-logo-input').value.trim(),
                 info: info
             });
-            localStorage.setItem('krizix_home_matches', JSON.stringify(matches));
-            logAdminAction("Ajout Match", "", "", `Ajout d'un nouveau match (${type}) contre ${title}.`);
+            syncMatchesToServer();
+            logAdminAction("Ajout Match", "", "", `Ajout d'un match contre ${title}.`);
             closeMatchModal();
             renderMatches();
         }
         function deleteMatch(id) {
             const m = matches.find(item => item.id === id);
             matches = matches.filter(item => item.id !== id);
-            localStorage.setItem('krizix_home_matches', JSON.stringify(matches));
-            logAdminAction("Suppression Match", "", "", `Le match contre "${m ? m.title : id}" a été supprimé.`);
+            syncMatchesToServer();
+            logAdminAction("Suppression Match", "", "", `Match contre "${m ? m.title : id}" supprimé.`);
             renderMatches();
         }
 
@@ -2163,12 +2172,12 @@
         function toggleLanguage() { currentLang = currentLang === 'fr' ? 'en' : 'fr'; localStorage.setItem('krizix_lang', currentLang); applyLanguage(); }
 
         updateAdminUI();
-        renderNews();
-        renderTournaments();
+        fetchNews();
+        fetchTournaments();
+        fetchMatches();
         renderProTournaments();
         renderSponsors();
         loadStats();
-        renderMatches();
         renderSocialsWidget();
         applyLanguage();
 
