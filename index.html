@@ -846,11 +846,16 @@
                 phone: document.getElementById('soc-phone').value.trim() || ''
             };
             
-            const beforeTxt = `Discord: ${oldSoc.discord}, Twitter: ${oldSoc.twitter}, Insta: ${oldSoc.insta}, TikTok: ${oldSoc.tiktok}, Twitch: ${oldSoc.twitch}, Téléphone: ${oldSoc.phone || 'Aucun'}`;
-            const afterTxt = `Discord: ${newSoc.discord}, Twitter: ${newSoc.twitter}, Insta: ${newSoc.insta}, TikTok: ${newSoc.tiktok}, Twitch: ${newSoc.twitch}, Téléphone: ${newSoc.phone || 'Aucun'}`;
+            let details = `A mis à jour les réseaux sociaux :\n` +
+                          `• Discord : "${oldSoc.discord}" → "${newSoc.discord}"\n` +
+                          `• Twitter : "${oldSoc.twitter}" → "${newSoc.twitter}"\n` +
+                          `• Instagram : "${oldSoc.insta}" → "${newSoc.insta}"\n` +
+                          `• TikTok : "${oldSoc.tiktok}" → "${newSoc.tiktok}"\n` +
+                          `• Twitch : "${oldSoc.twitch}" → "${newSoc.twitch}"\n` +
+                          `• Téléphone : "${oldSoc.phone || 'Aucun'}" → "${newSoc.phone || 'Aucun'}"`;
 
             saveSharedSetting('socials', newSoc).then(() => {
-                logAdminAction("Modification Réseaux Sociaux", beforeTxt, afterTxt, `Mise à jour des liens des réseaux sociaux par l'administrateur.`);
+                logAdminAction("Modification Réseaux Sociaux", details);
                 closeSocialsModal();
                 renderSocialsWidget();
                 alert("Réseaux mis à jour !");
@@ -968,24 +973,15 @@
             if (adminBar) { adminBar.style.display = isAdmin ? 'flex' : 'none'; }
         }
 
-        // --- CORRECTION DES LOGS POUR LE BACKEND ---
-        function logAdminAction(actionName, beforeData, afterData, simpleDetails = null) {
+        // --- FONCTION DE LOG AVANT / APRÈS UNIFORMISÉE ---
+        function logAdminAction(actionName, detailsText) {
             const user = getConnectedUser();
             const author = user ? (user.username || user.global_name || user.name) : "Administrateur Anonyme";
             
-            // Construit un texte de détails propre incluant les modifications avant/après
-            let details = simpleDetails || "";
-            if (beforeData || afterData) {
-                if (details) details += "\n";
-                if (beforeData) details += `• **Avant :** ${beforeData}\n`;
-                if (afterData) details += `• **Après :** ${afterData}`;
-            }
-            if (!details) details = "Aucun détail fourni.";
-
             fetch(`${API_BASE}/api/send-log`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: author, action: actionName, details: details })
+                body: JSON.stringify({ username: author, action: actionName, details: detailsText })
             }).catch(err => console.error("Erreur envoi log:", err));
         }
 
@@ -1256,14 +1252,26 @@
             if (id) {
                 const pt = proTournaments.find(item => item.id == id);
                 if (pt) {
+                    const oldName = pt.name, oldDesc = pt.desc, oldStatus = pt.status, oldUrl = pt.url, oldImg = pt.img || '';
                     pt.name = name; pt.img = img; pt.desc = desc; pt.status = status; pt.statusColor = statusColor; pt.url = url;
                     syncProTournamentsToServer();
-                    logAdminAction("Tournoi Pro Modifié", "", "", `A mis à jour le tournoi pro "${name}"`);
+                    
+                    let details = `A mis à jour le tournoi pro "${oldName}" :\n` +
+                                  `• Nom : "${oldName}" → "${name}"\n` +
+                                  `• Description : "${oldDesc}" → "${desc}"\n` +
+                                  `• Statut : "${oldStatus}" → "${status}"\n` +
+                                  `• Lien : "${oldUrl}" → "${url}"\n` +
+                                  `• Image : "${oldImg}" → "${img}"`;
+                    logAdminAction("Tournoi Pro Modifié", details);
                 }
             } else {
                 proTournaments.push({ id: Date.now(), name, img, desc, status, statusColor, url });
                 syncProTournamentsToServer();
-                logAdminAction("Tournoi Pro Ajouté", "", "", `A ajouté le tournoi pro "${name}"`);
+                let details = `A ajouté le tournoi pro "${name}" :\n` +
+                              `• Nom : "${name}"\n` +
+                              `• Statut : "${status}"\n` +
+                              `• Description : "${desc}"`;
+                logAdminAction("Tournoi Pro Ajouté", details);
             }
             closeProTourneyModal();
             renderProTournaments();
@@ -1273,7 +1281,9 @@
             const pt = proTournaments.find(item => item.id === id);
             proTournaments = proTournaments.filter(item => item.id !== id);
             syncProTournamentsToServer();
-            logAdminAction("Tournoi Pro Supprimé", "", "", `A supprimé le tournoi pro "${pt ? pt.name : id}"`);
+            let details = `A supprimé le tournoi pro "${pt ? pt.name : id}" :\n` +
+                          `• Nom : "${pt ? pt.name : 'Inconnu'}"`;
+            logAdminAction("Tournoi Pro Supprimé", details);
             renderProTournaments();
         }
 
@@ -1356,12 +1366,23 @@
             if (id) {
                 const n = newsList.find(item => item.id == id);
                 if (n) { 
+                    const oldTitle = n.title, oldDesc = n.desc, oldImg = n.img, oldDate = n.date;
                     n.title = title; n.date = date; n.img = img; n.desc = desc; 
-                    logAdminAction("Actualité Modifiée", "", "", `A mis à jour l'actualité "${title}"`);
+                    
+                    let details = `A mis à jour l'actualité "${oldTitle}" :\n` +
+                                  `• Titre : "${oldTitle}" → "${title}"\n` +
+                                  `• Description : "${oldDesc}" → "${desc}"\n` +
+                                  `• Image : "${oldImg}" → "${img}"\n` +
+                                  `• Date : "${oldDate}" → "${date}"`;
+                    logAdminAction("Actualité Modifiée", details);
                 }
             } else {
                 newsList.unshift({ id: Date.now(), title, date, img, desc });
-                logAdminAction("Actualité Publiée", "", "", `A publié l'actualité "${title}"`);
+                let details = `A publié l'actualité "${title}" :\n` +
+                              `• Titre : "${title}"\n` +
+                              `• Description : "${desc}"\n` +
+                              `• Date : "${date}"`;
+                logAdminAction("Actualité Publiée", details);
             }
             syncNewsToServer();
             closeNewsModal();
@@ -1372,7 +1393,9 @@
             const n = newsList.find(item => item.id === id);
             newsList = newsList.filter(item => item.id !== id);
             syncNewsToServer();
-            logAdminAction("Actualité Supprimée", "", "", `A supprimé l'actualité "${n ? n.title : id}"`);
+            let details = `A supprimé l'actualité "${n ? n.title : id}" :\n` +
+                          `• Titre : "${n ? n.title : 'Inconnu'}"`;
+            logAdminAction("Actualité Supprimée", details);
             renderNews();
         }
 
@@ -1738,7 +1761,9 @@
             tourney.matchScores[`${matchId}_${teamNum}`] = rawVal === '' ? '-' : rawVal;
             
             syncTournamentsToServer();
-            logAdminAction("Score de Tournoi Modifié", `Ancien score: ${oldScore}`, `Nouveau score: ${rawVal}`, `A mis à jour le score du tournoi "${tourney.name}"`);
+            let details = `A mis à jour le score du tournoi "${tourney.name}" (Match ${matchId}, Équipe ${teamNum}) :\n` +
+                          `• Score : "${oldScore}" → "${rawVal === '' ? '-' : rawVal}"`;
+            logAdminAction("Score de Tournoi Modifié", details);
             
             closeQuickScoreModal();
             openBracketModal(tourneyId);
@@ -1951,7 +1976,11 @@
             });
             
             syncTournamentsToServer();
-            logAdminAction("Inscription Tournoi", "", "", `L'équipe "${teamName}" (Capitaine: ${user.username}) s'est inscrite au tournoi "${tourney.name}".`);
+            let details = `L'équipe "${teamName}" (Capitaine : @${user.username}) s'est inscrite au tournoi "${tourney.name}" :\n` +
+                          `• Équipe : "Aucune" → "${teamName}"\n` +
+                          `• Capitaine In-Game : "Aucun" → "${tracker}"`;
+            logAdminAction("Inscription Tournoi", details);
+            
             closeRegisterModal();
             renderTournaments();
             alert("Inscription validée avec succès !");
@@ -2007,12 +2036,25 @@
             if (id) {
                 const t = tournaments.find(item => item.id == id);
                 if (t) { 
+                    const oldName = t.name, oldGame = t.game, oldTitle = t.rewardTitle || 'Aucun', oldDate = t.date, oldDesc = t.desc;
                     t.name = name; t.game = game; t.rewardTitle = rewardTitle; t.date = date; t.desc = desc; 
-                    logAdminAction("Modification Tournoi", "", "", `Le tournoi "${name}" a été modifié.`);
+                    
+                    let details = `Le tournoi "${oldName}" a été modifié :\n` +
+                                  `• Nom : "${oldName}" → "${name}"\n` +
+                                  `• Jeu : "${oldGame}" → "${game}"\n` +
+                                  `• Titre : "${oldTitle}" → "${rewardTitle || 'Aucun'}"\n` +
+                                  `• Date : "${oldDate}" → "${date}"\n` +
+                                  `• Description : "${oldDesc}" → "${desc}"`;
+                    logAdminAction("Modification Tournoi", details);
                 }
             } else {
                 tournaments.push({ id: Date.now(), name, game, rewardTitle, date, desc, participants: [] });
-                logAdminAction("Création Tournoi", "", "", `Création du tournoi : "${name}".`);
+                let details = `Création du tournoi "${name}" :\n` +
+                              `• Nom : "${name}"\n` +
+                              `• Jeu : "${game}"\n` +
+                              `• Titre : "${rewardTitle || 'Aucun'}"\n` +
+                              `• Date : "${date}"`;
+                logAdminAction("Création Tournoi", details);
             }
             syncTournamentsToServer();
             closeTourneyModal();
@@ -2023,7 +2065,9 @@
             const t = tournaments.find(item => item.id === id);
             tournaments = tournaments.filter(item => item.id !== id);
             syncTournamentsToServer();
-            logAdminAction("Suppression Tournoi", "", "", `Le tournoi "${t ? t.name : id}" a été supprimé.`);
+            let details = `Le tournoi "${t ? t.name : id}" a été supprimé :\n` +
+                          `• Nom : "${t ? t.name : 'Inconnu'}"`;
+            logAdminAction("Suppression Tournoi", details);
             renderTournaments();
         }
 
@@ -2081,7 +2125,11 @@
             if (!name) return;
             sponsors.push({ id: Date.now(), name, logo });
             syncSponsorsToServer();
-            logAdminAction("Ajout Partenaire", "", "", `Ajout d'un nouveau partenaire : "${name}".`);
+            let details = `Ajout d'un nouveau partenaire :\n` +
+                          `• Nom : "Aucun" → "${name}"\n` +
+                          `• Logo : "Aucun" → "${logo || 'Aucun'}"`;
+            logAdminAction("Ajout Partenaire", details);
+            
             document.getElementById('sponsor-name-input').value = '';
             document.getElementById('sponsor-logo-input').value = '';
             renderSponsorsEditList();
@@ -2091,7 +2139,9 @@
             const s = sponsors.find(item => item.id === id);
             sponsors = sponsors.filter(item => item.id !== id);
             syncSponsorsToServer();
-            logAdminAction("Suppression Partenaire", "", "", `Le partenaire "${s ? s.name : id}" a été supprimé.`);
+            let details = `Le partenaire "${s ? s.name : id}" a été supprimé :\n` +
+                          `• Nom : "${s ? s.name : 'Inconnu'}"`;
+            logAdminAction("Suppression Partenaire", details);
             renderSponsorsEditList();
             renderSponsors();
         }
@@ -2114,7 +2164,10 @@
             const oldStats = getHomeStats();
             const stats = { titres: document.getElementById('input-titres').value || '0', jeux: document.getElementById('input-jeux').value || '0' };
             saveSharedSetting('stats', stats).then(() => {
-                logAdminAction("Mise à jour Statistiques", `Titres: ${oldStats.titres}, Jeux: ${oldStats.jeux}`, `Titres: ${stats.titres}, Jeux: ${stats.jeux}`, `Mise à jour des statistiques globales.`);
+                let details = `Mise à jour des statistiques globales :\n` +
+                              `• Titres gagnés : "${oldStats.titres}" → "${stats.titres}"\n` +
+                              `• Jeux actifs : "${oldStats.jeux}" → "${stats.jeux}"`;
+                logAdminAction("Mise à jour Statistiques", details);
                 closeStatsModal(); loadStats();
             }).catch(err => alert('Impossible de sauvegarder les statistiques sur le serveur : ' + err.message));
         }
@@ -2171,16 +2224,24 @@
             const type = document.getElementById('match-type').value;
             const game = document.getElementById('match-game-input').value.trim() || 'Esport';
             const info = document.getElementById('match-info-input').value.trim() || 'À venir';
+            const logo = document.getElementById('match-logo-input').value.trim();
+
             matches.push({
                 id: Date.now(),
                 type: type,
                 game: game,
                 title: title,
-                logo: document.getElementById('match-logo-input').value.trim(),
+                logo: logo,
                 info: info
             });
             syncMatchesToServer();
-            logAdminAction("Ajout Match", "", "", `Ajout d'un match (${type}) contre ${title} [${game}] - ${info}.`);
+            
+            let details = `Ajout d'un match (${type === 'resultat' ? 'Résultat' : 'À venir'}) :\n` +
+                          `• Adversaire : "Aucun" → "${title}"\n` +
+                          `• Jeu : "Aucun" → "${game}"\n` +
+                          `• Info / Score : "Aucun" → "${info}"`;
+            logAdminAction("Ajout Match", details);
+            
             closeMatchModal();
             renderMatches();
         }
@@ -2188,7 +2249,9 @@
             const m = matches.find(item => item.id === id);
             matches = matches.filter(item => item.id !== id);
             syncMatchesToServer();
-            logAdminAction("Suppression Match", "", "", `Match contre "${m ? m.title : id}" supprimé.`);
+            let details = `Match contre "${m ? m.title : id}" supprimé :\n` +
+                          `• Adversaire : "${m ? m.title : 'Inconnu'}"`;
+            logAdminAction("Suppression Match", details);
             renderMatches();
         }
 
