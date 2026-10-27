@@ -15,7 +15,6 @@ nav{height:75px;position:sticky;top:0;z-index:1000;display:flex;align-items:cent
 .links a{color:var(--text);text-decoration:none;font-size:12px;font-weight:700;text-transform:uppercase;transition:color 0.25s}
 .links a:hover{color:var(--green)}
 
-/* Style du menu déroulant profil (pastille en haut à droite) */
 .user-menu-container { position: relative; display: flex; align-items: center; }
 .user-badge-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); padding: 6px 14px; border-radius: 30px; display: flex; align-items: center; gap: 10px; cursor: pointer; color: #fff; font-size: 13px; font-weight: 600; transition: border-color 0.3s; }
 .user-badge-btn:hover { border-color: var(--green); }
@@ -85,8 +84,8 @@ nav{height:75px;position:sticky;top:0;z-index:1000;display:flex;align-items:cent
   </div>
   <div class="actions" id="actions"></div>
   
-  <!-- BOUTON CLOCHE ET PASTILLE NOTIFICATIONS -->
-  <div style="position: relative; margin-left: auto;">
+  <!-- BOUTON CLOCHE ET PASTILLE NOTIFICATIONS (Affiché uniquement sur son propre profil) -->
+  <div id="bell-container" style="position: relative; margin-left: auto; display: none;">
     <button id="bell-btn" style="width: 45px; height: 45px; border-radius: 50%; background: var(--card); border: 1px solid var(--border); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
         <i class="fa-solid fa-bell"></i>
         <span id="bell-badge" style="position: absolute; top: 4px; right: 4px; width: 10px; height: 10px; background: var(--green); border-radius: 50%; display: none; border: 2px solid var(--bg);"></span>
@@ -148,7 +147,6 @@ async function saveOnlineSetting(key, value){
     }catch(e){console.warn(e); return false;}
 }
 
-// Mise à jour de la navbar pour afficher la pastille utilisateur avec Profil et Paramètres
 function renderAuthNav() {
     const authNav = document.getElementById('auth-nav-item');
     if (!authNav) return;
@@ -271,27 +269,36 @@ async function init(){
     const targetFollowers = subsMap[targetId] || [];
     safeText('followers-count', `${targetFollowers.length} Abonné${targetFollowers.length>1?'s':''}`);
     
-    const userNotifs = notifsMap[targetId] || [];
-    const notifListEl = document.getElementById('dropdown-notifs-list');
-    const bellBadge = document.getElementById('bell-badge');
+    // Affichage de la cloche uniquement si on est sur son propre profil
+    const isMyProfile = me && String(me.id) === String(targetId);
+    const bellContainer = document.getElementById('bell-container');
+    
+    if (isMyProfile) {
+        bellContainer.style.display = 'block';
+        const userNotifs = notifsMap[targetId] || [];
+        const notifListEl = document.getElementById('dropdown-notifs-list');
+        const bellBadge = document.getElementById('bell-badge');
 
-    if(userNotifs.length > 0){
-        bellBadge.style.display = 'block';
-        notifListEl.innerHTML = userNotifs.slice(-5).reverse().map(n => `<div style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05);"><i class="fa-solid fa-bell" style="color:var(--green); margin-right:6px;"></i>${n.text} <div style="font-size:10px; color:#7f8691; margin-top:2px;">${n.date}</div></div>`).join('');
+        if(userNotifs.length > 0){
+            bellBadge.style.display = 'block';
+            notifListEl.innerHTML = userNotifs.slice(-5).reverse().map(n => `<div style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05);"><i class="fa-solid fa-bell" style="color:var(--green); margin-right:6px;"></i>${n.text} <div style="font-size:10px; color:#7f8691; margin-top:2px;">${n.date}</div></div>`).join('');
+        } else {
+            bellBadge.style.display = 'none';
+            notifListEl.textContent = 'Aucune notification récente.';
+        }
+
+        const bellBtn = document.getElementById('bell-btn');
+        const notifDropdown = document.getElementById('notifications-dropdown');
+        bellBtn.onclick = (e) => {
+            e.stopPropagation();
+            notifDropdown.style.display = notifDropdown.style.display === 'block' ? 'none' : 'block';
+        };
+        document.addEventListener('click', () => {
+            if(notifDropdown) notifDropdown.style.display = 'none';
+        });
     } else {
-        bellBadge.style.display = 'none';
-        notifListEl.textContent = 'Aucune notification récente.';
+        bellContainer.style.display = 'none';
     }
-
-    const bellBtn = document.getElementById('bell-btn');
-    const notifDropdown = document.getElementById('notifications-dropdown');
-    bellBtn.onclick = (e) => {
-        e.stopPropagation();
-        notifDropdown.style.display = notifDropdown.style.display === 'block' ? 'none' : 'block';
-    };
-    document.addEventListener('click', () => {
-        if(notifDropdown) notifDropdown.style.display = 'none';
-    });
 
     const actionsContainer = document.getElementById('actions');
     actionsContainer.innerHTML = '';
