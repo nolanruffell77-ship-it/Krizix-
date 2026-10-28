@@ -765,32 +765,6 @@
 
         const DEFAULT_AVATAR = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png";
 
-        // Données communes à tous les visiteurs : elles sont stockées par l'API, pas dans le navigateur.
-        const API_BASE = 'https://mxpay16nd0.apps.bot-hosting.cloud';
-        let sharedSettings = {};
-        async function loadSharedSettings() {
-            try {
-                const response = await fetch(`${API_BASE}/api/site-settings`);
-                if (!response.ok) throw new Error('HTTP ' + response.status);
-                const data = await response.json();
-                if (data.success) sharedSettings = data.settings || {};
-            } catch (error) {
-                console.error('Impossible de charger les paramètres communs du site', error);
-            }
-        }
-        async function saveSharedSetting(key, value) {
-            const response = await fetch(`${API_BASE}/api/site-settings/${encodeURIComponent(key)}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ value })
-            });
-            if (!response.ok) throw new Error('Échec de sauvegarde : ' + key);
-            const data = await response.json();
-            if (!data.success) throw new Error(data.message || 'Échec de sauvegarde');
-            sharedSettings[key] = value;
-            return true;
-        }
-
         const DEFAULT_SOCIALS = {
             discord: "https://discord.gg/fUbKeUMTve",
             twitter: "https://x.com/KrizixEsport",
@@ -800,7 +774,12 @@
             phone: ""
         };
 
-        function getSocials() { return { ...DEFAULT_SOCIALS, ...(sharedSettings.socials || {}) }; }
+        function getSocials() {
+            try {
+                const saved = localStorage.getItem('krizix_social_links');
+                return saved ? JSON.parse(saved) : DEFAULT_SOCIALS;
+            } catch(e) { return DEFAULT_SOCIALS; }
+        }
 
         function copyPhoneNumber(phoneNumber) {
             navigator.clipboard.writeText(phoneNumber).then(() => {
@@ -846,20 +825,14 @@
                 phone: document.getElementById('soc-phone').value.trim() || ''
             };
             
-            let details = `A mis à jour les réseaux sociaux :\n` +
-                          `• Discord : "${oldSoc.discord}" → "${newSoc.discord}"\n` +
-                          `• Twitter : "${oldSoc.twitter}" → "${newSoc.twitter}"\n` +
-                          `• Instagram : "${oldSoc.insta}" → "${newSoc.insta}"\n` +
-                          `• TikTok : "${oldSoc.tiktok}" → "${newSoc.tiktok}"\n` +
-                          `• Twitch : "${oldSoc.twitch}" → "${newSoc.twitch}"\n` +
-                          `• Téléphone : "${oldSoc.phone || 'Aucun'}" → "${newSoc.phone || 'Aucun'}"`;
+            const beforeTxt = `Discord: ${oldSoc.discord}, Twitter: ${oldSoc.twitter}, Insta: ${oldSoc.insta}, TikTok: ${oldSoc.tiktok}, Twitch: ${oldSoc.twitch}, Téléphone: ${oldSoc.phone || 'Aucun'}`;
+            const afterTxt = `Discord: ${newSoc.discord}, Twitter: ${newSoc.twitter}, Insta: ${newSoc.insta}, TikTok: ${newSoc.tiktok}, Twitch: ${newSoc.twitch}, Téléphone: ${newSoc.phone || 'Aucun'}`;
 
-            saveSharedSetting('socials', newSoc).then(() => {
-                logAdminAction("Modification Réseaux Sociaux", details);
-                closeSocialsModal();
-                renderSocialsWidget();
-                alert("Réseaux mis à jour !");
-            }).catch(err => alert('Erreur de sauvegarde des réseaux : ' + err.message));
+            localStorage.setItem('krizix_social_links', JSON.stringify(newSoc));
+            logAdminAction("Modification Réseaux Sociaux", beforeTxt, afterTxt, `Mise à jour des liens des réseaux sociaux par l'administrateur.`);
+            closeSocialsModal();
+            renderSocialsWidget();
+            alert("Réseaux mis à jour !");
         }
 
         const GAME_LOGOS = {
@@ -973,16 +946,14 @@
             if (adminBar) { adminBar.style.display = isAdmin ? 'flex' : 'none'; }
         }
 
-        // --- FONCTION DE LOG AVANT / APRÈS UNIFORMISÉE ---
-        function logAdminAction(actionName, detailsText) {
+        function logAdminAction(actionName, beforeData, afterData, simpleDetails = null) {
             const user = getConnectedUser();
             const author = user ? (user.username || user.global_name || user.name) : "Administrateur Anonyme";
-            
-            fetch(`${API_BASE}/api/send-log`, {
+            fetch('https://mxpay16nd0.apps.bot-hosting.cloud/api/send-log', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: author, action: actionName, details: detailsText })
-            }).catch(err => console.error("Erreur envoi log:", err));
+                body: JSON.stringify({ username: author, action: actionName, before: beforeData, after: afterData, details: simpleDetails })
+            }).catch(err => console.error(err));
         }
 
         async function fetchDiscordMembers() {
@@ -1010,7 +981,7 @@
 
             function syncWithServer() {
                 let avatarUrl = user.avatar_url || (user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128` : DEFAULT_AVATAR);
-                fetch(`${API_BASE}/api/update-time`, {
+                fetch('https://mxpay16nd0.apps.bot-hosting.cloud/api/update-time', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1108,85 +1079,197 @@
         }
 
         // CHARGEMENT DU CLASSEMENT DEPUIS LE SERVEUR CENTRAL
-        async function renderVisitorsAndPremium() {
-            let ranking = [];
+        
+async function renderVisitorsAndPremium() {
+    let ranking = [];
 
-            try {
-                const response = await fetch(`${API_BASE}/api/visitors`);
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success && Array.isArray(data.visitors)) {
-                        ranking = data.visitors;
-                    }
-                }
-            } catch(e) {
-                console.warn("API serveur central injoignable.", e);
+    // 1. Charger le classement des visiteurs depuis le serveur
+    try {
+        const response = await fetch(`${API_BASE}/api/visitors`);
+
+        if (response.ok) {
+            const data = await response.json();
+
+            if (data.success && Array.isArray(data.visitors)) {
+                ranking = data.visitors;
             }
+        }
+    } catch (error) {
+        console.warn("API serveur central injoignable.", error);
+    }
 
-            const top3 = ranking.slice(0, 3);
-            const visitorsContainer = document.getElementById('top-visitors-container');
-            if (visitorsContainer) {
-                let html = '';
-                if (top3.length === 0) {
-                    html = `<p style="color:#7f8691; font-size:13px; font-style:italic; text-align:center;">Aucune visite enregistrée pour le moment.</p>`;
-                } else {
-                    top3.forEach((v, index) => {
-                        const rankColor = index === 0 ? '#f1c40f' : (index === 1 ? '#bdc3c7' : '#e67e22');
-                        const rankBadge = `<span style="font-family:'Bebas Neue'; font-size:1.2rem; color:${rankColor}; width:24px; text-align:center;">#${index + 1}</span>`;
-                        html += `
-                            <a href="profil.html?id=${v.userId}" style="display:flex; align-items:center; justify-content:space-between; background:rgba(0,0,0,0.35); border:1px solid var(--border); padding:12px 16px; border-radius:12px; text-decoration:none; color:#fff; transition:border-color 0.2s, transform 0.2s;" onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'">
-                                <div style="display:flex; align-items:center; gap:12px;">
-                                    ${rankBadge}
-                                    <div class="profile-avatar-frame" style="width:36px; height:36px;">
-                                        <img src="${v.avatar}" onerror="this.src='${DEFAULT_AVATAR}'" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
-                                    </div>
-                                    <span style="font-weight:700; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px;">${v.username}</span>
-                                </div>
-                                <div style="font-family:'Bebas Neue'; font-size:1.2rem; color:var(--green); letter-spacing:1px;">
-                                    ${formatSiteTime(v.seconds)}
-                                </div>
-                            </a>
-                        `;
-                    });
-                }
+    // 2. Afficher les trois premiers visiteurs
+    const top3 = ranking.slice(0, 3);
+    const visitorsContainer = document.getElementById('top-visitors-container');
 
-                visitorsContainer.innerHTML = html;
-            }
+    if (visitorsContainer) {
+        let html = '';
 
-            const premiumContainer = document.getElementById('last-premium-container');
-            if (premiumContainer) {
-                const lastPrem = getLastPremiumMember();
-                if (lastPrem && lastPrem.userId) {
-                    premiumContainer.innerHTML = `
-                        <a href="profil.html?id=${lastPrem.userId}" style="display:flex; flex-direction:column; align-items:center; text-decoration:none; color:#fff; gap:15px; width:100%;">
-                            <div class="profile-avatar-frame" style="width:90px; height:90px; border:2px solid #f1c40f; box-shadow:0 0 20px rgba(241,196,15,0.4);">
-                                <img src="${lastPrem.avatar}" onerror="this.src='${DEFAULT_AVATAR}'" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
+        if (top3.length === 0) {
+            html = `
+                <p style="color:#7f8691; font-size:13px; font-style:italic; text-align:center;">
+                    Aucune visite enregistrée pour le moment.
+                </p>
+            `;
+        } else {
+            top3.forEach((v, index) => {
+                const rankColor = index === 0
+                    ? '#f1c40f'
+                    : (index === 1 ? '#bdc3c7' : '#e67e22');
+
+                const rankBadge = `
+                    <span style="font-family:'Bebas Neue'; font-size:1.2rem; color:${rankColor}; width:24px; text-align:center;">
+                        #${index + 1}
+                    </span>
+                `;
+
+                html += `
+                    <a href="profil.html?id=${encodeURIComponent(v.userId)}"
+                       style="display:flex; align-items:center; justify-content:space-between; background:rgba(0,0,0,0.35); border:1px solid var(--border); padding:12px 16px; border-radius:12px; text-decoration:none; color:#fff; transition:border-color 0.2s, transform 0.2s;"
+                       onmouseover="this.style.borderColor='var(--green)'"
+                       onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'">
+
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            ${rankBadge}
+
+                            <div class="profile-avatar-frame" style="width:36px; height:36px;">
+                                <img src="${v.avatar || DEFAULT_AVATAR}"
+                                     onerror="this.src='${DEFAULT_AVATAR}'"
+                                     style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
                             </div>
-                            <div>
-                                <div style="font-family:'Bebas Neue'; font-size:1.8rem; color:#fff; letter-spacing:1px; margin-bottom:4px;">${lastPrem.username}</div>
-                                <span class="profile-badge-role" style="background:rgba(241,196,15,0.15); border:1px solid #f1c40f; color:#f1c40f; padding:5px 14px; border-radius:20px; font-size:11px; font-weight:700; display:inline-flex; align-items:center; gap:6px;">
-                                    PREMIUM
-                                </span>
-                            </div>
-                        </a>
-                    `;
-                } else {
-                    premiumContainer.innerHTML = `<p style="color:#7f8691; font-size:13px; font-style:italic;">Aucun membre premium pour le moment.</p>`;
-                }
-            }
+
+                            <span style="font-weight:700; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px;">
+                                ${v.username || 'Membre'}
+                            </span>
+                        </div>
+
+                        <div style="font-family:'Bebas Neue'; font-size:1.2rem; color:var(--green); letter-spacing:1px;">
+                            ${formatSiteTime(v.seconds || 0)}
+                        </div>
+                    </a>
+                `;
+            });
         }
 
-        let proTournaments = [];
-        async function fetchProTournaments() {
-            try { const res = await fetch(`${API_BASE}/api/pro-tournaments`); const data = await res.json();
-                if (data.success) { proTournaments = data.tournaments || []; renderProTournaments(); }
-            } catch (e) { console.error('Erreur chargement tournois pro', e); }
+        visitorsContainer.innerHTML = html;
+    }
+
+    // 3. Charger les titres partagés depuis le serveur
+    const premiumContainer = document.getElementById('last-premium-container');
+
+    if (!premiumContainer) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/api/site-settings`);
+
+        if (!response.ok) {
+            throw new Error(`Erreur HTTP ${response.status}`);
         }
-        async function syncProTournamentsToServer() {
-            try { const res = await fetch(`${API_BASE}/api/pro-tournaments`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({tournaments:proTournaments}) });
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-            } catch (e) { console.error('Erreur sauvegarde tournois pro', e); alert('Impossible de sauvegarder les tournois pro sur le serveur.'); }
+
+        const data = await response.json();
+        const sharedTitles =
+            data.settings?.krizix_user_titles_shared || {};
+
+        // 4. Trouver le membre qui a obtenu Premium le plus récemment
+        const premiumUsers = Object.entries(sharedTitles)
+            .filter(([userId, entry]) => {
+                const titles = Array.isArray(entry?.titles)
+                    ? entry.titles
+                    : [];
+
+                const hasPremiumTitle = titles.some(title => {
+                    const name = typeof title === 'string'
+                        ? title
+                        : title?.name;
+
+                    return typeof name === 'string' &&
+                        ['premium', 'premium⭐'].includes(
+                            name.trim().toLowerCase()
+                        );
+                });
+
+                const isAdmin = BASE_ADMINS
+                    .map(String)
+                    .includes(String(userId));
+
+                return hasPremiumTitle || isAdmin;
+            })
+            .map(([userId, entry]) => ({
+                userId: String(userId),
+                timestamp: Number(entry?.premiumSince) || 0
+            }))
+            .sort((a, b) => b.timestamp - a.timestamp);
+
+        // 5. Afficher le dernier membre Premium
+        if (premiumUsers.length === 0) {
+            premiumContainer.innerHTML = `
+                <p style="color:#7f8691; font-size:13px; font-style:italic;">
+                    Aucun membre premium pour le moment.
+                </p>
+            `;
+            return;
         }
+
+        const lastPrem = premiumUsers[0];
+
+        // Utiliser le cache local uniquement pour le nom et l'avatar
+        let cache = {};
+
+        try {
+            cache = JSON.parse(
+                localStorage.getItem('krizix_all_users_cache') || '{}'
+            );
+        } catch (error) {
+            console.warn("Impossible de lire le cache des membres.", error);
+        }
+
+        const cachedUser = cache[lastPrem.userId] || {};
+        const username = cachedUser.username ||
+            `Membre Premium #${lastPrem.userId.slice(-4)}`;
+        const avatar = cachedUser.avatar_url || DEFAULT_AVATAR;
+
+        premiumContainer.innerHTML = `
+            <a href="profil.html?id=${encodeURIComponent(lastPrem.userId)}"
+               style="display:flex; flex-direction:column; align-items:center; text-decoration:none; color:#fff; gap:15px; width:100%;">
+
+                <div class="profile-avatar-frame"
+                     style="width:90px; height:90px; border:2px solid #f1c40f; box-shadow:0 0 20px rgba(241,196,15,0.4);">
+
+                    <img src="${avatar}"
+                         onerror="this.src='${DEFAULT_AVATAR}'"
+                         style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
+                </div>
+
+                <div style="text-align:center;">
+                    <div style="font-family:'Bebas Neue'; font-size:1.8rem; color:#fff; letter-spacing:1px; margin-bottom:4px;">
+                        ${username}
+                    </div>
+
+                    <span class="profile-badge-role"
+                          style="background:rgba(241,196,15,0.15); border:1px solid #f1c40f; color:#f1c40f; padding:5px 14px; border-radius:20px; font-size:11px; font-weight:700; display:inline-flex; align-items:center; gap:6px;">
+                        PREMIUM
+                    </span>
+                </div>
+            </a>
+        `;
+    } catch (error) {
+        console.error(
+            "Erreur de chargement du dernier membre Premium :",
+            error
+        );
+
+        premiumContainer.innerHTML = `
+            <p style="color:#7f8691; font-size:13px; font-style:italic;">
+                Impossible de charger le membre Premium.
+            </p>
+        `;
+    }
+}
+
+
+        let proTournaments = JSON.parse(localStorage.getItem('krizix_pro_tournaments')) || [
+            { id: 1, name: "RLCS Major 2026", img: "", desc: "Suivez les compétitions mondiales officielles de Rocket League.", status: "EN DIRECT", statusColor: "#2ecc71", url: "https://www.twitch.tv/rocketleague" }
+        ];
 
         function renderProTournaments() {
             const container = document.getElementById('pro-tournaments-container');
@@ -1252,26 +1335,14 @@
             if (id) {
                 const pt = proTournaments.find(item => item.id == id);
                 if (pt) {
-                    const oldName = pt.name, oldDesc = pt.desc, oldStatus = pt.status, oldUrl = pt.url, oldImg = pt.img || '';
                     pt.name = name; pt.img = img; pt.desc = desc; pt.status = status; pt.statusColor = statusColor; pt.url = url;
-                    syncProTournamentsToServer();
-                    
-                    let details = `A mis à jour le tournoi pro "${oldName}" :\n` +
-                                  `• Nom : "${oldName}" → "${name}"\n` +
-                                  `• Description : "${oldDesc}" → "${desc}"\n` +
-                                  `• Statut : "${oldStatus}" → "${status}"\n` +
-                                  `• Lien : "${oldUrl}" → "${url}"\n` +
-                                  `• Image : "${oldImg}" → "${img}"`;
-                    logAdminAction("Tournoi Pro Modifié", details);
+                    localStorage.setItem('krizix_pro_tournaments', JSON.stringify(proTournaments));
+                    logAdminAction("Tournoi Pro Modifié", "", "", `A mis à jour le tournoi pro "${name}"`);
                 }
             } else {
                 proTournaments.push({ id: Date.now(), name, img, desc, status, statusColor, url });
-                syncProTournamentsToServer();
-                let details = `A ajouté le tournoi pro "${name}" :\n` +
-                              `• Nom : "${name}"\n` +
-                              `• Statut : "${status}"\n` +
-                              `• Description : "${desc}"`;
-                logAdminAction("Tournoi Pro Ajouté", details);
+                localStorage.setItem('krizix_pro_tournaments', JSON.stringify(proTournaments));
+                logAdminAction("Tournoi Pro Ajouté", "", "", `A ajouté le tournoi pro "${name}"`);
             }
             closeProTourneyModal();
             renderProTournaments();
@@ -1280,10 +1351,8 @@
         function deleteProTournament(id) {
             const pt = proTournaments.find(item => item.id === id);
             proTournaments = proTournaments.filter(item => item.id !== id);
-            syncProTournamentsToServer();
-            let details = `A supprimé le tournoi pro "${pt ? pt.name : id}" :\n` +
-                          `• Nom : "${pt ? pt.name : 'Inconnu'}"`;
-            logAdminAction("Tournoi Pro Supprimé", details);
+            localStorage.setItem('krizix_pro_tournaments', JSON.stringify(proTournaments));
+            logAdminAction("Tournoi Pro Supprimé", "", "", `A supprimé le tournoi pro "${pt ? pt.name : id}"`);
             renderProTournaments();
         }
 
@@ -1292,7 +1361,7 @@
 
         async function fetchNews() {
             try {
-                const res = await fetch(`${API_BASE}/api/news`);
+                const res = await fetch('https://mxpay16nd0.apps.bot-hosting.cloud/api/news');
                 const data = await res.json();
                 if (data.success) {
                     newsList = data.news || [];
@@ -1303,7 +1372,7 @@
 
         async function syncNewsToServer() {
             try {
-                await fetch(`${API_BASE}/api/news`, {
+                await fetch('https://mxpay16nd0.apps.bot-hosting.cloud/api/news', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ news: newsList })
@@ -1366,23 +1435,12 @@
             if (id) {
                 const n = newsList.find(item => item.id == id);
                 if (n) { 
-                    const oldTitle = n.title, oldDesc = n.desc, oldImg = n.img, oldDate = n.date;
                     n.title = title; n.date = date; n.img = img; n.desc = desc; 
-                    
-                    let details = `A mis à jour l'actualité "${oldTitle}" :\n` +
-                                  `• Titre : "${oldTitle}" → "${title}"\n` +
-                                  `• Description : "${oldDesc}" → "${desc}"\n` +
-                                  `• Image : "${oldImg}" → "${img}"\n` +
-                                  `• Date : "${oldDate}" → "${date}"`;
-                    logAdminAction("Actualité Modifiée", details);
+                    logAdminAction("Actualité Modifiée", "", "", `A mis à jour l'actualité "${title}"`);
                 }
             } else {
                 newsList.unshift({ id: Date.now(), title, date, img, desc });
-                let details = `A publié l'actualité "${title}" :\n` +
-                              `• Titre : "${title}"\n` +
-                              `• Description : "${desc}"\n` +
-                              `• Date : "${date}"`;
-                logAdminAction("Actualité Publiée", details);
+                logAdminAction("Actualité Publiée", "", "", `A publié l'actualité "${title}"`);
             }
             syncNewsToServer();
             closeNewsModal();
@@ -1393,9 +1451,7 @@
             const n = newsList.find(item => item.id === id);
             newsList = newsList.filter(item => item.id !== id);
             syncNewsToServer();
-            let details = `A supprimé l'actualité "${n ? n.title : id}" :\n` +
-                          `• Titre : "${n ? n.title : 'Inconnu'}"`;
-            logAdminAction("Actualité Supprimée", details);
+            logAdminAction("Actualité Supprimée", "", "", `A supprimé l'actualité "${n ? n.title : id}"`);
             renderNews();
         }
 
@@ -1404,7 +1460,7 @@
 
         async function fetchTournaments() {
             try {
-                const res = await fetch(`${API_BASE}/api/tournaments`);
+                const res = await fetch('https://mxpay16nd0.apps.bot-hosting.cloud/api/tournaments');
                 const data = await res.json();
                 if (data.success) {
                     tournaments = data.tournaments || [];
@@ -1415,7 +1471,7 @@
 
         async function syncTournamentsToServer() {
             try {
-                await fetch(`${API_BASE}/api/tournaments`, {
+                await fetch('https://mxpay16nd0.apps.bot-hosting.cloud/api/tournaments', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ tournaments })
@@ -1761,9 +1817,9 @@
             tourney.matchScores[`${matchId}_${teamNum}`] = rawVal === '' ? '-' : rawVal;
             
             syncTournamentsToServer();
-            let details = `A mis à jour le score du tournoi "${tourney.name}" (Match ${matchId}, Équipe ${teamNum}) :\n` +
-                          `• Score : "${oldScore}" → "${rawVal === '' ? '-' : rawVal}"`;
-            logAdminAction("Score de Tournoi Modifié", details);
+            
+            let teamName = `Équipe ${teamNum}`;
+            logAdminAction("Score de Tournoi Modifié", "", "", `A mis à jour le score du tournoi "${tourney.name}"`);
             
             closeQuickScoreModal();
             openBracketModal(tourneyId);
@@ -1976,11 +2032,7 @@
             });
             
             syncTournamentsToServer();
-            let details = `L'équipe "${teamName}" (Capitaine : @${user.username}) s'est inscrite au tournoi "${tourney.name}" :\n` +
-                          `• Équipe : "Aucune" → "${teamName}"\n` +
-                          `• Capitaine In-Game : "Aucun" → "${tracker}"`;
-            logAdminAction("Inscription Tournoi", details);
-            
+            logAdminAction("Inscription Tournoi", "", "", `L'équipe "${teamName}" s'est inscrite au tournoi "${tourney.name}".`);
             closeRegisterModal();
             renderTournaments();
             alert("Inscription validée avec succès !");
@@ -2036,25 +2088,12 @@
             if (id) {
                 const t = tournaments.find(item => item.id == id);
                 if (t) { 
-                    const oldName = t.name, oldGame = t.game, oldTitle = t.rewardTitle || 'Aucun', oldDate = t.date, oldDesc = t.desc;
                     t.name = name; t.game = game; t.rewardTitle = rewardTitle; t.date = date; t.desc = desc; 
-                    
-                    let details = `Le tournoi "${oldName}" a été modifié :\n` +
-                                  `• Nom : "${oldName}" → "${name}"\n` +
-                                  `• Jeu : "${oldGame}" → "${game}"\n` +
-                                  `• Titre : "${oldTitle}" → "${rewardTitle || 'Aucun'}"\n` +
-                                  `• Date : "${oldDate}" → "${date}"\n` +
-                                  `• Description : "${oldDesc}" → "${desc}"`;
-                    logAdminAction("Modification Tournoi", details);
+                    logAdminAction("Modification Tournoi", "", "", `Le tournoi "${name}" a été modifié.`);
                 }
             } else {
                 tournaments.push({ id: Date.now(), name, game, rewardTitle, date, desc, participants: [] });
-                let details = `Création du tournoi "${name}" :\n` +
-                              `• Nom : "${name}"\n` +
-                              `• Jeu : "${game}"\n` +
-                              `• Titre : "${rewardTitle || 'Aucun'}"\n` +
-                              `• Date : "${date}"`;
-                logAdminAction("Création Tournoi", details);
+                logAdminAction("Création Tournoi", "", "", `Création du tournoi : "${name}".`);
             }
             syncTournamentsToServer();
             closeTourneyModal();
@@ -2065,23 +2104,11 @@
             const t = tournaments.find(item => item.id === id);
             tournaments = tournaments.filter(item => item.id !== id);
             syncTournamentsToServer();
-            let details = `Le tournoi "${t ? t.name : id}" a été supprimé :\n` +
-                          `• Nom : "${t ? t.name : 'Inconnu'}"`;
-            logAdminAction("Suppression Tournoi", details);
+            logAdminAction("Suppression Tournoi", "", "", `Le tournoi "${t ? t.name : id}" a été supprimé.`);
             renderTournaments();
         }
 
-        let sponsors = [];
-        async function fetchSponsors() {
-            try { const res = await fetch(`${API_BASE}/api/sponsors`); const data = await res.json();
-                if (data.success) { sponsors = data.sponsors || []; renderSponsors(); }
-            } catch (e) { console.error('Erreur chargement partenaires', e); }
-        }
-        async function syncSponsorsToServer() {
-            try { const res = await fetch(`${API_BASE}/api/sponsors`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({sponsors}) });
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-            } catch (e) { console.error('Erreur sauvegarde partenaires', e); alert('Impossible de sauvegarder les partenaires sur le serveur.'); }
-        }
+        let sponsors = JSON.parse(localStorage.getItem('krizix_sponsors')) || [];
         function renderSponsors() {
             const track = document.getElementById('sponsors-track');
             if (!track) return;
@@ -2124,12 +2151,8 @@
             const logo = document.getElementById('sponsor-logo-input').value.trim();
             if (!name) return;
             sponsors.push({ id: Date.now(), name, logo });
-            syncSponsorsToServer();
-            let details = `Ajout d'un nouveau partenaire :\n` +
-                          `• Nom : "Aucun" → "${name}"\n` +
-                          `• Logo : "Aucun" → "${logo || 'Aucun'}"`;
-            logAdminAction("Ajout Partenaire", details);
-            
+            localStorage.setItem('krizix_sponsors', JSON.stringify(sponsors));
+            logAdminAction("Ajout Partenaire", "", "", `Ajout d'un nouveau partenaire : "${name}".`);
             document.getElementById('sponsor-name-input').value = '';
             document.getElementById('sponsor-logo-input').value = '';
             renderSponsorsEditList();
@@ -2138,38 +2161,31 @@
         function deleteSponsor(id) {
             const s = sponsors.find(item => item.id === id);
             sponsors = sponsors.filter(item => item.id !== id);
-            syncSponsorsToServer();
-            let details = `Le partenaire "${s ? s.name : id}" a été supprimé :\n` +
-                          `• Nom : "${s ? s.name : 'Inconnu'}"`;
-            logAdminAction("Suppression Partenaire", details);
+            localStorage.setItem('krizix_sponsors', JSON.stringify(sponsors));
+            logAdminAction("Suppression Partenaire", "", "", `Le partenaire "${s ? s.name : id}" a été supprimé.`);
             renderSponsorsEditList();
             renderSponsors();
         }
 
-        function getHomeStats() { return { titres:'0', jeux:'5', ...(sharedSettings.stats || {}) }; }
         function loadStats() {
-            const stats = getHomeStats();
+            const stats = JSON.parse(localStorage.getItem('krizix_home_stats')) || { titres: '0', jeux: '5' };
             document.getElementById('stat-titres').innerText = stats.titres;
             document.getElementById('stat-jeux').innerText = stats.jeux;
             fetchDiscordMembers();
         }
         function openStatsModal() {
-            const stats = getHomeStats();
+            const stats = JSON.parse(localStorage.getItem('krizix_home_stats')) || { titres: '0', jeux: '5' };
             document.getElementById('input-titres').value = stats.titres;
             document.getElementById('input-jeux').value = stats.jeux;
             document.getElementById('modal-stats').style.display = 'flex';
         }
         function closeStatsModal() { document.getElementById('modal-stats').style.display = 'none'; }
         function saveStats() {
-            const oldStats = getHomeStats();
             const stats = { titres: document.getElementById('input-titres').value || '0', jeux: document.getElementById('input-jeux').value || '0' };
-            saveSharedSetting('stats', stats).then(() => {
-                let details = `Mise à jour des statistiques globales :\n` +
-                              `• Titres gagnés : "${oldStats.titres}" → "${stats.titres}"\n` +
-                              `• Jeux actifs : "${oldStats.jeux}" → "${stats.jeux}"`;
-                logAdminAction("Mise à jour Statistiques", details);
-                closeStatsModal(); loadStats();
-            }).catch(err => alert('Impossible de sauvegarder les statistiques sur le serveur : ' + err.message));
+            localStorage.setItem('krizix_home_stats', JSON.stringify(stats));
+            logAdminAction("Mise à jour Statistiques", "", "", `Mise à jour des statistiques globales.`);
+            closeStatsModal();
+            loadStats();
         }
 
         // --- SYNCHRONISATION MATCHS VIA API ---
@@ -2177,7 +2193,7 @@
 
         async function fetchMatches() {
             try {
-                const res = await fetch(`${API_BASE}/api/matches`);
+                const res = await fetch('https://mxpay16nd0.apps.bot-hosting.cloud/api/matches');
                 const data = await res.json();
                 if (data.success) {
                     matches = data.matches || [];
@@ -2188,7 +2204,7 @@
 
         async function syncMatchesToServer() {
             try {
-                await fetch(`${API_BASE}/api/matches`, {
+                await fetch('https://mxpay16nd0.apps.bot-hosting.cloud/api/matches', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ matches })
@@ -2224,24 +2240,16 @@
             const type = document.getElementById('match-type').value;
             const game = document.getElementById('match-game-input').value.trim() || 'Esport';
             const info = document.getElementById('match-info-input').value.trim() || 'À venir';
-            const logo = document.getElementById('match-logo-input').value.trim();
-
             matches.push({
                 id: Date.now(),
                 type: type,
                 game: game,
                 title: title,
-                logo: logo,
+                logo: document.getElementById('match-logo-input').value.trim(),
                 info: info
             });
             syncMatchesToServer();
-            
-            let details = `Ajout d'un match (${type === 'resultat' ? 'Résultat' : 'À venir'}) :\n` +
-                          `• Adversaire : "Aucun" → "${title}"\n` +
-                          `• Jeu : "Aucun" → "${game}"\n` +
-                          `• Info / Score : "Aucun" → "${info}"`;
-            logAdminAction("Ajout Match", details);
-            
+            logAdminAction("Ajout Match", "", "", `Ajout d'un match contre ${title}.`);
             closeMatchModal();
             renderMatches();
         }
@@ -2249,9 +2257,7 @@
             const m = matches.find(item => item.id === id);
             matches = matches.filter(item => item.id !== id);
             syncMatchesToServer();
-            let details = `Match contre "${m ? m.title : id}" supprimé :\n` +
-                          `• Adversaire : "${m ? m.title : 'Inconnu'}"`;
-            logAdminAction("Suppression Match", details);
+            logAdminAction("Suppression Match", "", "", `Match contre "${m ? m.title : id}" supprimé.`);
             renderMatches();
         }
 
@@ -2260,11 +2266,13 @@
         function toggleLanguage() { currentLang = currentLang === 'fr' ? 'en' : 'fr'; localStorage.setItem('krizix_lang', currentLang); applyLanguage(); }
 
         updateAdminUI();
-        (async function initSharedSiteData() {
-            await loadSharedSettings();
-            await Promise.all([fetchNews(), fetchTournaments(), fetchMatches(), fetchProTournaments(), fetchSponsors()]);
-            loadStats(); renderSocialsWidget();
-        })();
+        fetchNews();
+        fetchTournaments();
+        fetchMatches();
+        renderProTournaments();
+        renderSponsors();
+        loadStats();
+        renderSocialsWidget();
         applyLanguage();
 
         startSiteTimeTrackerForIndex();
