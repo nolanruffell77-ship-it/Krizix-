@@ -765,7 +765,7 @@
 
         const DEFAULT_AVATAR = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png";
 
-        // Données communes à tous les visiteurs : elles sont stockées par l'API, pas dans le navigateur.
+        // Données communes à tous les visiteurs : stockées par l'API
         const API_BASE = 'https://mxpay16nd0.apps.bot-hosting.cloud';
         let sharedSettings = {};
         async function loadSharedSettings() {
@@ -973,7 +973,6 @@
             if (adminBar) { adminBar.style.display = isAdmin ? 'flex' : 'none'; }
         }
 
-        // --- FONCTION DE LOG AVANT / APRÈS UNIFORMISÉE ---
         function logAdminAction(actionName, detailsText) {
             const user = getConnectedUser();
             const author = user ? (user.username || user.global_name || user.name) : "Administrateur Anonyme";
@@ -999,7 +998,6 @@
             document.getElementById('stat-membres').innerText = '38';
         }
 
-        // SUIVI DU TEMPS SYNCHRONISÉ AVEC LE SERVEUR CENTRAL
         function startSiteTimeTrackerForIndex() {
             const user = getConnectedUser();
             if (!user || !user.id) return;
@@ -1107,7 +1105,6 @@
             return { userId: null, username: "Aucun pour l'instant", avatar: DEFAULT_AVATAR, timestamp: 0 };
         }
 
-        // CHARGEMENT DU CLASSEMENT DEPUIS LE SERVEUR CENTRAL
         async function renderVisitorsAndPremium() {
             let ranking = [];
 
@@ -1287,7 +1284,6 @@
             renderProTournaments();
         }
 
-        // --- SYNCHRONISATION ACTUALITÉS VIA API ---
         let newsList = [];
 
         async function fetchNews() {
@@ -1399,7 +1395,6 @@
             renderNews();
         }
 
-        // --- SYNCHRONISATION TOURNOIS VIA API ---
         let tournaments = [];
 
         async function fetchTournaments() {
@@ -2172,7 +2167,6 @@
             }).catch(err => alert('Impossible de sauvegarder les statistiques sur le serveur : ' + err.message));
         }
 
-        // --- SYNCHRONISATION MATCHS VIA API ---
         let matches = [];
 
         async function fetchMatches() {
