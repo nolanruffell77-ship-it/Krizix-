@@ -791,26 +791,116 @@
             return inputVal;
         }
 
-        function assignTitleToProfile() {
-            const targetUniqueId = document.getElementById('input-target-profile-id').value.trim().toUpperCase();
-            const selectedTitleName = document.getElementById('select-title-to-assign').value;
-            if (!targetUniqueId) return alert("Veuillez saisir un ID unique !");
-            const realUserId = findRealUserId(targetUniqueId);
-            if (!realUserId) return alert("Aucun compte associé à cet ID Unique.");
-            let userTitles = JSON.parse(localStorage.getItem(`krizix_user_titles_${realUserId}`) || '[]');
-            const titleExists = userTitles.some(t => (typeof t === 'string' ? t : t.name) === selectedTitleName);
-            if (!titleExists) {
-                const titleObj = getAvailableTitles().find(t => t.name === selectedTitleName) || { name: selectedTitleName, color: '#2ecc71' };
-                userTitles.push(titleObj);
-                localStorage.setItem(`krizix_user_titles_${realUserId}`, JSON.stringify(userTitles));
+        const TITLES_SERVER_KEY = 'krizix_user_titles_shared';
 
-                sendAdminLog("Attribution de Titre (Give)", "Aucun", `Utilisateur ID: ${realUserId} (Titre: ${selectedTitleName})`, `Le titre "${selectedTitleName}" a été attribué au membre ID ${realUserId}.`);
+async function getSharedUserTitles() {
+    const response = await fetch(`${API_BASE}/api/site-settings`);
 
-                alert(`Succès ! Le titre "${selectedTitleName}" a été attribué.`);
-            } else {
-                alert("Le compte possède déjà ce titre.");
-            }
+    if (!response.ok) {
+        throw new Error('Impossible de lire les titres sur le serveur.');
+    }
+
+    const data = await response.json();
+    return data.settings?.[TITLES_SERVER_KEY] || {};
+}
+
+async function saveSharedUserTitles(sharedTitles) {
+    const response = await fetch(
+        `${API_BASE}/api/site-settings/${encodeURIComponent(TITLES_SERVER_KEY)}`,
+        {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ value: sharedTitles })
         }
+    );
+
+    if (!response.ok) {
+        throw new Error('Impossible de sauvegarder les titres sur le serveur.');
+    }
+}
+
+        async function assignTitleToProfile() {
+    const targetUniqueId = document
+        .getElementById('input-target-profile-id')
+        .value.trim().toUpperCase();
+
+    const selectedTitleName = document
+        .getElementById('select-title-to-assign').value;
+
+    if (!targetUniqueId) {
+        return alert("Veuillez saisir un ID unique !");
+    }
+
+    const realUserId = findRealUserId(targetUniqueId);
+
+    if (!realUserId) {
+        return alert("Aucun compte associé à cet ID Unique.");
+    }
+
+    try {
+        const sharedTitles = await getSharedUserTitles();
+
+        const userTitles = Array.isArray(sharedTitles[realUserId]?.titles)
+            ? sharedTitles[realUserId].titles
+            : JSON.parse(
+                localStorage.getItem(`krizix_user_titles_${realUserId}`) || '[]'
+            );
+
+        const titleExists = userTitles.some(t =>
+            (typeof t === 'string' ? t : t.name) === selectedTitleName
+        );
+
+        if (titleExists) {
+            return alert("Le compte possède déjà ce titre.");
+        }
+
+        const titleObj = getAvailableTitles().find(
+            t => t.name === selectedTitleName
+        ) || { name: selectedTitleName, color: '#2ecc71' };
+
+        userTitles.push(titleObj);
+
+        const isPremium = ['premium', 'premium⭐'].includes(
+            selectedTitleName.trim().toLowerCase()
+        );
+
+        const previousData = sharedTitles[realUserId] || {};
+
+        sharedTitles[realUserId] = {
+            ...previousData,
+            titles: userTitles,
+            premiumSince: isPremium
+                ? Date.now()
+                : (previousData.premiumSince || 0)
+        };
+
+        await saveSharedUserTitles(sharedTitles);
+
+        localStorage.setItem(
+            `krizix_user_titles_${realUserId}`,
+            JSON.stringify(userTitles)
+        );
+
+        if (isPremium) {
+            localStorage.setItem(
+                `krizix_premium_since_${realUserId}`,
+                String(sharedTitles[realUserId].premiumSince)
+            );
+        }
+
+        sendAdminLog(
+            "Attribution de Titre (Give)",
+            "Aucun",
+            `Utilisateur ID: ${realUserId} (Titre: ${selectedTitleName})`,
+            `Le titre "${selectedTitleName}" a été attribué au membre ID ${realUserId}.`
+        );
+
+        alert(`Succès ! Le titre "${selectedTitleName}" a été attribué.`);
+    } catch (error) {
+        console.error("Erreur de sauvegarde des titres :", error);
+        alert("Le titre n'a pas pu être sauvegardé sur le serveur. Réessaie.");
+    }
+}
 
         function loadUserTitlesForRevoke() {
             const inputVal = document.getElementById('input-revoke-profile-id').value.trim();
@@ -829,20 +919,69 @@
             document.getElementById('revoke-titles-result-container').style.display = 'block';
         }
 
-        function revokeSelectedTitleFromUser() {
-            if (!currentRevokeUserId) return;
-            const titleToRevoke = document.getElementById('select-user-title-to-revoke').value;
-            if (confirm(`Retirer le titre "${titleToRevoke}" ?`)) {
-                let userTitles = JSON.parse(localStorage.getItem(`krizix_user_titles_${currentRevokeUserId}`) || '[]');
-                userTitles = userTitles.filter(t => (typeof t === 'object' ? t.name : t) !== titleToRevoke);
-                localStorage.setItem(`krizix_user_titles_${currentRevokeUserId}`, JSON.stringify(userTitles));
+        async function revokeSelectedTitleFromUser() {
+    if (!currentRevokeUserId) return;
 
-                sendAdminLog("Retrait de Titre", `Utilisateur ID: ${currentRevokeUserId} (Titre: ${titleToRevoke})`, "Retiré", `Le titre "${titleToRevoke}" a été retiré du membre ID ${currentRevokeUserId}.`);
+    const titleToRevoke = document
+        .getElementById('select-user-title-to-revoke').value;
 
-                alert("Titre retiré avec succès !");
-                loadUserTitlesForRevoke();
-            }
+    if (!confirm(`Retirer le titre "${titleToRevoke}" ?`)) return;
+
+    try {
+        const sharedTitles = await getSharedUserTitles();
+        const userId = String(currentRevokeUserId);
+
+        const userTitles = Array.isArray(sharedTitles[userId]?.titles)
+            ? sharedTitles[userId].titles
+            : JSON.parse(
+                localStorage.getItem(`krizix_user_titles_${userId}`) || '[]'
+            );
+
+        const updatedTitles = userTitles.filter(t =>
+            (typeof t === 'object' ? t.name : t) !== titleToRevoke
+        );
+
+        const previousData = sharedTitles[userId] || {};
+
+        const stillHasPremium = updatedTitles.some(t => {
+            const name = typeof t === 'string' ? t : t?.name;
+            return typeof name === 'string' &&
+                ['premium', 'premium⭐'].includes(name.trim().toLowerCase());
+        });
+
+        sharedTitles[userId] = {
+            ...previousData,
+            titles: updatedTitles,
+            premiumSince: stillHasPremium
+                ? (previousData.premiumSince || Date.now())
+                : 0
+        };
+
+        await saveSharedUserTitles(sharedTitles);
+
+        localStorage.setItem(
+            `krizix_user_titles_${userId}`,
+            JSON.stringify(updatedTitles)
+        );
+
+        if (!stillHasPremium) {
+            localStorage.removeItem(`krizix_premium_since_${userId}`);
         }
+
+        sendAdminLog(
+            "Retrait de Titre",
+            `Utilisateur ID: ${userId} (Titre: ${titleToRevoke})`,
+            "Retiré",
+            `Le titre "${titleToRevoke}" a été retiré du membre ID ${userId}.`
+        );
+
+        alert("Titre retiré avec succès !");
+        loadUserTitlesForRevoke();
+    } catch (error) {
+        console.error("Erreur lors du retrait du titre :", error);
+        alert("Le titre n'a pas pu être retiré sur le serveur. Réessaie.");
+    }
+}
 
         async function loadJoinDate(user) {
             const dateEl = document.getElementById('p-joined-date');
